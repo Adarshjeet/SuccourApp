@@ -1,0 +1,47 @@
+{
+  "project_info": {
+    "project_number": "367516539445",
+    "project_id": "succour-3673d",
+    "storage_bucket": "succour-3673d.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:367516539445:android:014cb701e526537ebc6f7c",
+        "android_client_info": {
+          "package_name": "com.example.succour"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "367516539445-3jk03femsg0l1e5giu8c5587rri9ss4h.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.succour",
+            "certificate_hash": "eceb6b9c53b3cceb59a1473d0d7e9544092e1b61"
+          }
+        },
+        {
+          "client_id": "367516539445-08is3pgaq7b6nhqeut7707d66bcisno7.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyB6SLc0glp_tIuZQh9FYYPfMnzLzDgQBHE"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "367516539445-08is3pgaq7b6nhqeut7707d66bcisno7.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

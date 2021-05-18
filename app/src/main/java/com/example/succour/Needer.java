@@ -74,7 +74,7 @@ public class Needer extends FragmentActivity implements OnMapReadyCallback {
         googleMap.animateCamera(CameraUpdateFactory.newLatLng(latLng));
         googleMap.animateCamera(CameraUpdateFactory.newLatLngZoom(latLng, 11));
         googleMap.addMarker(markerOptions);
-        Toast.makeText(getApplicationContext(),"Searching",Toast.LENGTH_LONG).show();
+       // Toast.makeText(getApplicationContext(),"Searching",Toast.LENGTH_LONG).show();
         getHelper();
     }
     @Override
@@ -106,7 +106,7 @@ public class Needer extends FragmentActivity implements OnMapReadyCallback {
                 if(!helperFound && !key.equals(userId)){
                     helperFound= true;
                     helperFoundId=key;
-                    Toast.makeText(getApplicationContext(),key,Toast.LENGTH_LONG).show();
+                    Toast.makeText(getApplicationContext(),key+" "+radius,Toast.LENGTH_LONG).show();
                 }
             }
 
@@ -124,7 +124,7 @@ public class Needer extends FragmentActivity implements OnMapReadyCallback {
             public void onGeoQueryReady() {
                     if(!helperFound){
                         radius++;
-                        Toast.makeText(getApplicationContext(),radius,Toast.LENGTH_LONG).show();
+
                         getHelper();
 
                     }

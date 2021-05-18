@@ -10,6 +10,8 @@ import android.widget.Toast;
 
 import com.firebase.geofire.GeoFire;
 import com.firebase.geofire.GeoLocation;
+import com.firebase.geofire.GeoQuery;
+import com.firebase.geofire.GeoQueryEventListener;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.location.FusedLocationProviderClient;
@@ -20,6 +22,7 @@ import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 
@@ -28,6 +31,8 @@ import androidx.core.app.ActivityCompat;
 import androidx.fragment.app.FragmentActivity;
 public class Needer extends FragmentActivity implements OnMapReadyCallback {
     Location currentLocation;
+    LatLng pickUp;
+    String userId;
     FusedLocationProviderClient fusedLocationProviderClient;
     private static final int REQUEST_CODE = 101;
     @Override
@@ -36,6 +41,7 @@ public class Needer extends FragmentActivity implements OnMapReadyCallback {
         setContentView(R.layout.activity_needer);
         fusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(this);
         fetchLocation();
+
     }
     private void fetchLocation() {
         if (ActivityCompat.checkSelfPermission(
@@ -58,14 +64,18 @@ public class Needer extends FragmentActivity implements OnMapReadyCallback {
     @Override
     public void onMapReady(GoogleMap googleMap) {
         LatLng latLng = new LatLng(currentLocation.getLatitude(), currentLocation.getLongitude());
+        pickUp= new LatLng(currentLocation.getLatitude(), currentLocation.getLongitude());
         DatabaseReference ref = FirebaseDatabase.getInstance().getReference().child("Needer");
         GeoFire geoFire= new GeoFire(ref);
-        String userId = FirebaseAuth.getInstance().getCurrentUser().getUid();
+        userId = FirebaseAuth.getInstance().getCurrentUser().getUid();
         geoFire.setLocation(userId,new GeoLocation(currentLocation.getLatitude(),currentLocation.getLongitude()));
         MarkerOptions markerOptions = new MarkerOptions().position(latLng).title("I am here!");
+
         googleMap.animateCamera(CameraUpdateFactory.newLatLng(latLng));
-        googleMap.animateCamera(CameraUpdateFactory.newLatLngZoom(latLng, 5));
+        googleMap.animateCamera(CameraUpdateFactory.newLatLngZoom(latLng, 11));
         googleMap.addMarker(markerOptions);
+        Toast.makeText(getApplicationContext(),"Searching",Toast.LENGTH_LONG).show();
+        getHelper();
     }
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
@@ -81,5 +91,49 @@ public class Needer extends FragmentActivity implements OnMapReadyCallback {
     {
         FirebaseAuth.getInstance().signOut();
         startActivity(new Intent(getApplicationContext(),Login.class));
+    }
+    private int radius = 1;
+    private Boolean helperFound =false;
+    private  String helperFoundId;
+    private void getHelper(){
+        DatabaseReference helperReference = FirebaseDatabase.getInstance().getReference().child("Helper Available");
+        GeoFire geofire = new GeoFire(helperReference);
+        GeoQuery geoQuery = geofire.queryAtLocation(new GeoLocation(pickUp.latitude, pickUp.longitude),radius);
+        geoQuery.removeAllListeners();
+        geoQuery.addGeoQueryEventListener(new GeoQueryEventListener() {
+            @Override
+            public void onKeyEntered(String key, GeoLocation location) {
+                if(!helperFound && !key.equals(userId)){
+                    helperFound= true;
+                    helperFoundId=key;
+                    Toast.makeText(getApplicationContext(),key,Toast.LENGTH_LONG).show();
+                }
+            }
+
+            @Override
+            public void onKeyExited(String key) {
+
+            }
+
+            @Override
+            public void onKeyMoved(String key, GeoLocation location) {
+
+            }
+
+            @Override
+            public void onGeoQueryReady() {
+                    if(!helperFound){
+                        radius++;
+                        Toast.makeText(getApplicationContext(),radius,Toast.LENGTH_LONG).show();
+                        getHelper();
+
+                    }
+            }
+
+            @Override
+            public void onGeoQueryError(DatabaseError error) {
+
+            }
+        });
     }
 }

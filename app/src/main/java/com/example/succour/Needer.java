@@ -157,7 +157,7 @@ public class Needer extends FragmentActivity implements OnMapReadyCallback,
     private Boolean helperFound =false;
     private  String helperFoundId;
     private void getHelper(){
-        search.setText("Searching User");
+        search.setText("Searching........");
         DatabaseReference helperReference = FirebaseDatabase.getInstance().getReference().child("Helper Available");
         GeoFire geofire = new GeoFire(helperReference);
         GeoQuery geoQuery = geofire.queryAtLocation(new GeoLocation(pickUp.latitude, pickUp.longitude),radius);
@@ -170,6 +170,7 @@ public class Needer extends FragmentActivity implements OnMapReadyCallback,
                     helperFound= true;
                     helperFoundId=key;
                     DatabaseReference reference = FirebaseDatabase.getInstance().getReference().child("User Info").child(key);
+                    search.setText("Found:"+key);
                     Toast.makeText(getApplicationContext(),key,Toast.LENGTH_LONG).show();
                     HashMap map = new HashMap();
                     map.put("needer id",userId);
@@ -206,9 +207,8 @@ public class Needer extends FragmentActivity implements OnMapReadyCallback,
     }
     private Marker helpMarker;
     private void getHelperLocation(){
-        DatabaseReference ref = FirebaseDatabase.getInstance().getReference().child("HelperWorking").child("l");
-        //Toast.makeText(getApplicationContext(),"king1",Toast.LENGTH_LONG).show();
-        ref.addValueEventListener(new ValueEventListener() {
+        DatabaseReference refHelper = FirebaseDatabase.getInstance().getReference().child("Helper Available").child(helperFoundId).child("l");
+        refHelper.addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(@NotNull DataSnapshot snapshot) {
                 if(snapshot.exists()){
@@ -227,9 +227,8 @@ public class Needer extends FragmentActivity implements OnMapReadyCallback,
                     if(helpMarker!=null){
                         helpMarker.remove();
                     }
-                    helpMarker= mMap.addMarker(new MarkerOptions().position(helperLatLng).title("your helper"));
+                    helpMarker= mMap.addMarker(new MarkerOptions().position(helperLatLng).title("your helper here"));
                 }
-                Toast.makeText(getApplicationContext(),"king",Toast.LENGTH_LONG).show();
             }
 
             @Override

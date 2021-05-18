@@ -52,6 +52,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
                 .findFragmentById(R.id.map);
         mapFragment.getMapAsync(this);
+
     }
 
     @Override
@@ -134,11 +135,13 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     public void Need(View view)
     {
         startActivity(new Intent(getApplicationContext(),Needer.class));
+        finish();
     }
     public void Logout(View view)
     {
         FirebaseAuth.getInstance().signOut();
         startActivity(new Intent(getApplicationContext(),Login.class));
+        finish();
     }
 
 

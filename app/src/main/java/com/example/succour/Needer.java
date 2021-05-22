@@ -10,6 +10,11 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.Toast;
 
+import com.directions.route.AbstractRouting;
+import com.directions.route.Route;
+import com.directions.route.RouteException;
+import com.directions.route.Routing;
+import com.directions.route.RoutingListener;
 import com.firebase.geofire.GeoFire;
 import com.firebase.geofire.GeoLocation;
 import com.firebase.geofire.GeoQuery;
@@ -28,6 +33,8 @@ import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
+import com.google.android.gms.maps.model.Polyline;
+import com.google.android.gms.maps.model.PolylineOptions;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.database.DataSnapshot;
@@ -43,12 +50,13 @@ import androidx.fragment.app.FragmentActivity;
 
 import org.jetbrains.annotations.NotNull;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
 public class Needer extends FragmentActivity implements OnMapReadyCallback,
         LocationListener, GoogleApiClient.ConnectionCallbacks,
-        GoogleApiClient.OnConnectionFailedListener{
+        GoogleApiClient.OnConnectionFailedListener, RoutingListener {
 
     private GoogleMap mMap;
     Location mLastLocation;
@@ -58,6 +66,9 @@ public class Needer extends FragmentActivity implements OnMapReadyCallback,
     LocationRequest mLocationRequest;
     LatLng pickUp;
     String userId;
+    private List<Polyline> polylines;
+    private static final int[] COLORS = new int[]{R.color.primary_dark_material_light};
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -65,6 +76,7 @@ public class Needer extends FragmentActivity implements OnMapReadyCallback,
         setContentView(R.layout.activity_needer);
         search = (Button)findViewById(R.id.help);
         // Obtain the SupportMapFragment and get notified when the map is ready to be used.
+        polylines = new ArrayList<>();
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
                 .findFragmentById(R.id.map);
         mapFragment.getMapAsync(this);
@@ -206,6 +218,7 @@ public class Needer extends FragmentActivity implements OnMapReadyCallback,
         });
     }
     private Marker helpMarker;
+    LatLng helperLatLng;
     private void getHelperLocation(){
         DatabaseReference refHelper = FirebaseDatabase.getInstance().getReference().child("Helper Available").child(helperFoundId).child("l");
         refHelper.addValueEventListener(new ValueEventListener() {
@@ -222,12 +235,13 @@ public class Needer extends FragmentActivity implements OnMapReadyCallback,
                     if(map.get(1)!= null){
                         locationLng = Double.parseDouble(map.get(1).toString());
                     }
-                    LatLng helperLatLng = new LatLng(locationLat,locationLng);
+                    helperLatLng = new LatLng(locationLat,locationLng);
                     Toast.makeText(getApplicationContext(),String.valueOf(locationLat),Toast.LENGTH_LONG).show();
                     if(helpMarker!=null){
                         helpMarker.remove();
                     }
                     helpMarker= mMap.addMarker(new MarkerOptions().position(helperLatLng).title("your helper here"));
+                    getRouteToMarker(pickUp);
                 }
             }
 
@@ -236,5 +250,70 @@ public class Needer extends FragmentActivity implements OnMapReadyCallback,
 
             }
         });
+    }
+    private void getRouteToMarker(LatLng pick){
+
+        Routing routing = new Routing.Builder()
+                .travelMode(AbstractRouting.TravelMode.DRIVING)
+                .withListener(this)
+                .alternativeRoutes(true)
+                .waypoints(pick,helperLatLng)
+                .key("AIzaSyDGA6Y29R7ZmpYjmEiku_UJE2vPrHvfiMc")  //also define your api key here.
+                .build();
+        routing.execute();
+
+    }
+
+    @Override
+    public void onRoutingFailure(RouteException e) {
+        if(e != null) {
+            Toast.makeText(this, "Error: " + e.getMessage(), Toast.LENGTH_LONG).show();
+        }else {
+            Toast.makeText(this, "Something went wrong, Try again", Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    @Override
+    public void onRoutingStart() {
+            Toast.makeText(this,"here start",Toast.LENGTH_LONG).show();
+    }
+
+    @Override
+    public void onRoutingSuccess(ArrayList<Route> route, int shortestRouteIndex) {
+        if(polylines.size()>0) {
+            for (Polyline poly : polylines) {
+                poly.remove();
+            }
+        }
+        Toast.makeText(getApplicationContext(),"come",Toast.LENGTH_LONG).show();
+
+        polylines = new ArrayList<>();
+        //add route(s) to the map.
+        for (int i = 0; i <route.size(); i++) {
+
+            //In case of more than 5 alternative routes
+            int colorIndex = i % COLORS.length;
+
+            PolylineOptions polyOptions = new PolylineOptions();
+            polyOptions.color(getResources().getColor(COLORS[colorIndex]));
+            polyOptions.width(10 + i * 3);
+            polyOptions.addAll(route.get(i).getPoints());
+            Polyline polyline = mMap.addPolyline(polyOptions);
+            polylines.add(polyline);
+
+            Toast.makeText(getApplicationContext(),"Route "+ (i+1) +": distance - "+ route.get(i).getDistanceValue()+": duration - "+ route.get(i).getDurationValue(),Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    @Override
+    public void onRoutingCancelled() {
+
+    }
+    private void erasePolyLines(){
+        for(Polyline line : polylines){
+            line.remove();
+
+        }
+        polylines.clear();
     }
 }

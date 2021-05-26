@@ -69,6 +69,11 @@ public class Needer extends FragmentActivity implements OnMapReadyCallback,
     LatLng pickUp;
     String userId;
     String userToken;
+    private int radius = 1;
+    private Boolean helperFound =false;
+    private  String helperFoundId;
+    private Marker helpMarker;
+    LatLng helperLatLng;
     private List<Polyline> polylines;
     private static final int[] COLORS = new int[]{R.color.primary_dark_material_light};
 
@@ -118,7 +123,7 @@ public class Needer extends FragmentActivity implements OnMapReadyCallback,
         mLocationRequest = new LocationRequest();
         mLocationRequest.setInterval(10000);
         mLocationRequest.setFastestInterval(10000);
-        mLocationRequest.setPriority(LocationRequest.PRIORITY_BALANCED_POWER_ACCURACY);
+        mLocationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
         if (ContextCompat.checkSelfPermission(this,
                 Manifest.permission.ACCESS_FINE_LOCATION)
                 == PackageManager.PERMISSION_GRANTED) {
@@ -168,9 +173,7 @@ public class Needer extends FragmentActivity implements OnMapReadyCallback,
     public void Search(View view){
         getHelper();
     }
-    private int radius = 1;
-    private Boolean helperFound =false;
-    private  String helperFoundId;
+
     private void getHelper(){
         search.setText("Searching........");
         DatabaseReference helperReference = FirebaseDatabase.getInstance().getReference().child("Helper Available");
@@ -245,8 +248,6 @@ public class Needer extends FragmentActivity implements OnMapReadyCallback,
         fcmNotificationsSender.SendNotifications();
     }
 
-    private Marker helpMarker;
-    LatLng helperLatLng;
     private void getHelperLocation(){
         DatabaseReference refHelper = FirebaseDatabase.getInstance().getReference().child("Helper Available").child(helperFoundId).child("l");
         refHelper.addValueEventListener(new ValueEventListener() {
@@ -330,6 +331,7 @@ public class Needer extends FragmentActivity implements OnMapReadyCallback,
             polylines.add(polyline);
 
             Toast.makeText(getApplicationContext(),"Route "+ (i+1) +": distance - "+ route.get(i).getDistanceValue()+": duration - "+ route.get(i).getDurationValue(),Toast.LENGTH_SHORT).show();
+            break;
         }
     }
 

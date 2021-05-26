@@ -72,9 +72,10 @@ public class MainActivity extends AppCompatActivity {
             double longitude = gpsTracker.getLongitude();
             tvLatitude.setText(String.valueOf(latitude));
             tvLongitude.setText(String.valueOf(longitude));
-            FcmNotificationsSender fcmNotificationsSender = new FcmNotificationsSender(userToken,"Emergency","I am in emergency please help", getApplicationContext(), MainActivity.this);
+            FcmNotificationsSender fcmNotificationsSender = new FcmNotificationsSender(userToken,"Emergency","I am in emergency please help", getApplicationContext(),MainActivity.this);
             fcmNotificationsSender.SendNotifications();
-            getToken();
+            //getToken();
+           // startActivity(new Intent(getApplicationContext(),Alert.class));
         }else{
             gpsTracker.showSettingsAlert();
         }

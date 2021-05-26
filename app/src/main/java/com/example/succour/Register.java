@@ -19,6 +19,7 @@ import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.messaging.FirebaseMessaging;
 
 
 public class Register extends AppCompatActivity {
@@ -29,14 +30,30 @@ public class Register extends AppCompatActivity {
     FirebaseAuth fAuth;
     FirebaseDatabase rootnode;
     DatabaseReference reference;
-
+    String userToken;
     ProgressBar progressBar;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_register);
+        FirebaseMessaging.getInstance().getToken()
+                .addOnCompleteListener(new OnCompleteListener<String>() {
+                    @Override
+                    public void onComplete(@NonNull Task<String> task) {
+                        if (!task.isSuccessful()) {
+                            //Log.w(TAG, "Fetching FCM registration token failed", task.getException());
+                            Toast.makeText(Register.this, "error", Toast.LENGTH_SHORT).show();
+                            return;
+                        }
 
+                        // Get new FCM registration token
+                        userToken = task.getResult();
+
+
+                        //    Toast.makeText(MainActivity.this, userToken, Toast.LENGTH_SHORT).show();
+                    }
+                });
         mFullName   = findViewById(R.id.fullName);
         mEmail      = findViewById(R.id.Email);
         mPassword   = findViewById(R.id.password);
@@ -86,7 +103,8 @@ public class Register extends AppCompatActivity {
                         if(task.isSuccessful()){
                             rootnode = FirebaseDatabase.getInstance();
                             reference = rootnode.getReference("User Info");
-                            Helper helper = new Helper(name,email,password,phone);
+
+                            Helper helper = new Helper(name,email,password,phone,userToken);
                             String userId =FirebaseAuth.getInstance().getCurrentUser().getUid();
                             reference.child(userId).setValue(helper);
                             Toast.makeText(Register.this, "Register Successfull", Toast.LENGTH_SHORT).show();

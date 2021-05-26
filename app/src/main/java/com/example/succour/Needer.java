@@ -35,6 +35,7 @@ import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.maps.model.Polyline;
 import com.google.android.gms.maps.model.PolylineOptions;
+import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.database.DataSnapshot;
@@ -42,6 +43,7 @@ import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
+import com.google.firebase.messaging.FirebaseMessaging;
 
 import androidx.annotation.NonNull;
 import androidx.core.app.ActivityCompat;
@@ -66,6 +68,7 @@ public class Needer extends FragmentActivity implements OnMapReadyCallback,
     LocationRequest mLocationRequest;
     LatLng pickUp;
     String userId;
+    String userToken;
     private List<Polyline> polylines;
     private static final int[] COLORS = new int[]{R.color.primary_dark_material_light};
 
@@ -113,8 +116,8 @@ public class Needer extends FragmentActivity implements OnMapReadyCallback,
     public void onConnected(Bundle bundle) {
 
         mLocationRequest = new LocationRequest();
-        mLocationRequest.setInterval(1000);
-        mLocationRequest.setFastestInterval(1000);
+        mLocationRequest.setInterval(10000);
+        mLocationRequest.setFastestInterval(10000);
         mLocationRequest.setPriority(LocationRequest.PRIORITY_BALANCED_POWER_ACCURACY);
         if (ContextCompat.checkSelfPermission(this,
                 Manifest.permission.ACCESS_FINE_LOCATION)
@@ -143,7 +146,7 @@ public class Needer extends FragmentActivity implements OnMapReadyCallback,
         markerOptions.position(latLng);
         markerOptions.title("Current Position");
         markerOptions.icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_GREEN));
-        mCurrLocationMarker = mMap.addMarker(markerOptions);
+       // mCurrLocationMarker = mMap.addMarker(markerOptions);
         mMap.moveCamera(CameraUpdateFactory.newLatLng(latLng));
         mMap.animateCamera(CameraUpdateFactory.zoomTo(11));
         userId = FirebaseAuth.getInstance().getCurrentUser().getUid();
@@ -181,8 +184,27 @@ public class Needer extends FragmentActivity implements OnMapReadyCallback,
                 if(!helperFound && !key.equals(userId)){
                     helperFound= true;
                     helperFoundId=key;
+                    DatabaseReference ref = FirebaseDatabase.getInstance().getReference().child("User Info").child(key).child("token");
+                    ref.addValueEventListener(new ValueEventListener() {
+                        @Override
+                        public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+
+                            if (dataSnapshot.exists()){
+                                userToken = dataSnapshot.getValue(String.class);
+                                sendNotification();
+                                Toast.makeText(getApplicationContext(),userToken,Toast.LENGTH_LONG).show();
+                            }
+                        }
+
+                        @Override
+                        public void onCancelled(@NonNull DatabaseError databaseError) {
+
+                        }
+                    });
+                    //Toast.makeText(getApplicationContext(),userToken,Toast.LENGTH_LONG).show();
                     DatabaseReference reference = FirebaseDatabase.getInstance().getReference().child("User Info").child(key);
-                    search.setText("Found:"+key);
+                    sendNotification();
+                    search.setText("Found:"+userToken+" "+key);
                     Toast.makeText(getApplicationContext(),key,Toast.LENGTH_LONG).show();
                     HashMap map = new HashMap();
                     map.put("needer id",userId);
@@ -217,6 +239,12 @@ public class Needer extends FragmentActivity implements OnMapReadyCallback,
             }
         });
     }
+
+    private void sendNotification() {
+        FcmNotificationsSender fcmNotificationsSender = new FcmNotificationsSender(userToken,"Emergency","I am in emergency please help", getApplicationContext(), Needer.this);
+        fcmNotificationsSender.SendNotifications();
+    }
+
     private Marker helpMarker;
     LatLng helperLatLng;
     private void getHelperLocation(){

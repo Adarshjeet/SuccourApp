@@ -55,7 +55,7 @@ import java.util.List;
 public class MapsActivity extends FragmentActivity implements OnMapReadyCallback,
         LocationListener,GoogleApiClient.ConnectionCallbacks,
         GoogleApiClient.OnConnectionFailedListener, RoutingListener {
-
+    Button b;
     private GoogleMap mMap;
     Location mLastLocation;
     Marker helpMarker;
@@ -73,17 +73,18 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         super.onCreate(savedInstanceState);
         click = (Button)findViewById(R.id.helpMe);
         setContentView(R.layout.activity_maps);
+        b = (Button)findViewById(R.id.helpMe);
         // Obtain the SupportMapFragment and get notified when the map is ready to be used.
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
                 .findFragmentById(R.id.map);
         mapFragment.getMapAsync(this);
-       /* if(i==0){
-            click.setVisibility(View.INVISIBLE);
+        if(i==0){
+            b.setVisibility(View.INVISIBLE);
         }
         else {
-            click.setVisibility(View.VISIBLE);
+            b.setVisibility(View.VISIBLE);
             i = 0;
-        }*/
+        }
 
     }
 

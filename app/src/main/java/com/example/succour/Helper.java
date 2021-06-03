@@ -1,6 +1,6 @@
 package com.example.succour;
 public class Helper {
-    String name,email,password,phone,Token;
+    String name,email,password,phone,Token,contact;
 
     public String getToken() {
         return Token;
@@ -10,12 +10,21 @@ public class Helper {
         Token = token;
     }
 
-    public Helper(String name, String email, String password, String phone, String Token) {
+    public String getContact() {
+        return contact;
+    }
+
+    public void setContact(String contact) {
+        this.contact = contact;
+    }
+
+    public Helper(String name, String email, String password, String phone, String Token, String contact) {
         this.name = name;
         this.email = email;
         this.password = password;
         this.phone = phone;
         this.Token = Token;
+        this.contact= contact;
     }
 
     public Helper() {

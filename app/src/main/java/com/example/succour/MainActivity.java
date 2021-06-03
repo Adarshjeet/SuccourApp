@@ -1,7 +1,10 @@
 package com.example.succour;
+import android.Manifest;
+import android.app.PendingIntent;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
+import android.telephony.SmsManager;
 import android.view.View;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -63,6 +66,7 @@ public class MainActivity extends AppCompatActivity {
         } catch (Exception e){
             e.printStackTrace();
         }
+
     }
 
     public void getLocation(View view){
@@ -74,7 +78,6 @@ public class MainActivity extends AppCompatActivity {
             tvLongitude.setText(String.valueOf(longitude));
             FcmNotificationsSender fcmNotificationsSender = new FcmNotificationsSender(userToken,"Emergency","I am in emergency please help", getApplicationContext(),MainActivity.this);
             fcmNotificationsSender.SendNotifications();
-            //getToken();
            // startActivity(new Intent(getApplicationContext(),Alert.class));
         }else{
             gpsTracker.showSettingsAlert();
@@ -87,18 +90,31 @@ public class MainActivity extends AppCompatActivity {
     }
     public void onEmergency(View view)
     {
-        startActivity(new Intent(getApplicationContext(),Needer.class));
-        finish();
+
+            if (ContextCompat.checkSelfPermission(MainActivity.this, Manifest.permission.SEND_SMS) == PackageManager.PERMISSION_GRANTED) {
+                sendmessage();
+            }
+            else{
+                ActivityCompat.requestPermissions(MainActivity.this,new String[]{Manifest.permission.SEND_SMS},101);
+            }
+            startActivity(new Intent(getApplicationContext(),Needer.class));
+            finish();
     }
-    public void getToken(){
+    private void sendmessage() {
         String userId = FirebaseAuth.getInstance().getCurrentUser().getUid();
-        DatabaseReference ref = FirebaseDatabase.getInstance().getReference().child("User Info").child(userId).child("token");
-        ref.addValueEventListener(new ValueEventListener() {
+        DatabaseReference refer = FirebaseDatabase.getInstance().getReference().child("User Info").child(userId).child("contact");
+        refer.addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
 
                 if (dataSnapshot.exists()){
                     String email = dataSnapshot.getValue(String.class);
+                    Intent intent = new Intent(getApplicationContext(),MainActivity.class);
+                    PendingIntent pi = PendingIntent.getActivity(getApplicationContext(), 0, intent, 0);
+
+                    //Get the SmsManager instance and call the sendTextMessage method to send message
+                    SmsManager sms = SmsManager.getDefault();
+                    sms.sendTextMessage(email, null,"I am in emergency ,I need help", pi, null);
                     Toast.makeText(getApplicationContext(),email,Toast.LENGTH_LONG).show();
                 }
             }
@@ -108,6 +124,19 @@ public class MainActivity extends AppCompatActivity {
 
             }
         });
+
+
+
+
+    }
+    public void onRequestPermissionsResult(int requestCode, @NonNull  String[] permissions, @NonNull int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        if(requestCode==101 && grantResults.length>0 && grantResults[0]==PackageManager.PERMISSION_GRANTED){
+            sendmessage();
+        }
+        else{
+            Toast.makeText(getApplicationContext(),"Permission deny",Toast.LENGTH_LONG).show();
+        }
     }
 
 }

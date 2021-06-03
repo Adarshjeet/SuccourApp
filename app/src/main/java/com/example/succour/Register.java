@@ -24,7 +24,7 @@ import com.google.firebase.messaging.FirebaseMessaging;
 
 public class Register extends AppCompatActivity {
 
-    EditText mFullName,mEmail,mPassword,mPhone;
+    EditText mFullName,mEmail,mPassword,mPhone,mContact;
     Button mRegisterBtn;
     TextView mLoginBtn;
     FirebaseAuth fAuth;
@@ -60,7 +60,7 @@ public class Register extends AppCompatActivity {
         mPhone      = findViewById(R.id.phone);
         mRegisterBtn= findViewById(R.id.registerBtn);
         mLoginBtn   = findViewById(R.id.createText);
-
+        mContact = findViewById(R.id.Ephone);
         fAuth = FirebaseAuth.getInstance();
         progressBar = findViewById(R.id.progressBar);
 
@@ -77,7 +77,7 @@ public class Register extends AppCompatActivity {
                 String password = mPassword.getText().toString().trim();
                 String name = mFullName.getText().toString().trim();
                 String phone = mPhone.getText().toString().trim();
-
+                String contact = mContact.getText().toString().trim();
                 if(TextUtils.isEmpty(email)){
                     mEmail.setError("Email is Required.");
                     return;
@@ -85,6 +85,26 @@ public class Register extends AppCompatActivity {
 
                 if(TextUtils.isEmpty(password)){
                     mPassword.setError("Password is Required.");
+                    return;
+                }
+                if(TextUtils.isEmpty(password)){
+                    mPassword.setError("Password is Required.");
+                    return;
+                }
+                if(TextUtils.isEmpty(phone)){
+                    mPhone.setError("Phone no. is Required.");
+                    return;
+                }
+                if(TextUtils.isEmpty(contact)){
+                    mContact.setError("Emergency Contact is Required.");
+                    return;
+                }
+                if(phone.length()!=10){
+                    mPhone.setError("Contact no. must be equal to 10 digits");
+                    return;
+                }
+                if(contact.length()!=10){
+                    mContact.setError("Contact no. must be equal to 10 digits");
                     return;
                 }
 
@@ -104,7 +124,7 @@ public class Register extends AppCompatActivity {
                             rootnode = FirebaseDatabase.getInstance();
                             reference = rootnode.getReference("User Info");
 
-                            Helper helper = new Helper(name,email,password,phone,userToken);
+                            Helper helper = new Helper(name,email,password,phone,userToken,contact);
                             String userId =FirebaseAuth.getInstance().getCurrentUser().getUid();
                             reference.child(userId).setValue(helper);
                             Toast.makeText(Register.this, "Register Successfull", Toast.LENGTH_SHORT).show();

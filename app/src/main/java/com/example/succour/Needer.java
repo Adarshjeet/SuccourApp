@@ -1,11 +1,13 @@
 package com.example.succour;
 
 import android.Manifest;
+import android.app.PendingIntent;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.location.Location;
 import android.os.Build;
 import android.os.Bundle;
+import android.telephony.SmsManager;
 import android.view.View;
 import android.widget.Button;
 import android.widget.Toast;
@@ -77,6 +79,7 @@ public class Needer extends FragmentActivity implements OnMapReadyCallback,
     private  String helperFoundId;
     private Marker helpMarker;
     LatLng helperLatLng;
+    boolean flag=false;
     private List<Polyline> polylines;
     private static final int[] COLORS = new int[]{R.color.primary_dark_material_light};
 
@@ -88,6 +91,7 @@ public class Needer extends FragmentActivity implements OnMapReadyCallback,
         search = (Button)findViewById(R.id.help);
         // Obtain the SupportMapFragment and get notified when the map is ready to be used.
         polylines = new ArrayList<>();
+
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
                 .findFragmentById(R.id.map);
         mapFragment.getMapAsync(this);
@@ -271,6 +275,8 @@ public class Needer extends FragmentActivity implements OnMapReadyCallback,
             }
         });
     }
+
+
 
     private void sendNotification() {
         FcmNotificationsSender fcmNotificationsSender = new FcmNotificationsSender(userToken,"Emergency","I am in emergency please help", getApplicationContext(), Needer.this);

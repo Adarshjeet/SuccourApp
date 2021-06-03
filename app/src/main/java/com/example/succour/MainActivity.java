@@ -66,7 +66,6 @@ public class MainActivity extends AppCompatActivity {
         } catch (Exception e){
             e.printStackTrace();
         }
-
     }
 
     public void getLocation(View view){
@@ -91,7 +90,7 @@ public class MainActivity extends AppCompatActivity {
     public void onEmergency(View view)
     {
 
-            if (ContextCompat.checkSelfPermission(MainActivity.this, Manifest.permission.SEND_SMS) == PackageManager.PERMISSION_GRANTED) {
+           if (ContextCompat.checkSelfPermission(MainActivity.this, Manifest.permission.SEND_SMS) == PackageManager.PERMISSION_GRANTED) {
                 sendmessage();
             }
             else{
@@ -109,7 +108,7 @@ public class MainActivity extends AppCompatActivity {
 
                 if (dataSnapshot.exists()){
                     String email = dataSnapshot.getValue(String.class);
-                    Intent intent = new Intent(getApplicationContext(),MainActivity.class);
+                    Intent intent = new Intent(getApplicationContext(),Needer.class);
                     PendingIntent pi = PendingIntent.getActivity(getApplicationContext(), 0, intent, 0);
 
                     //Get the SmsManager instance and call the sendTextMessage method to send message
@@ -128,15 +127,6 @@ public class MainActivity extends AppCompatActivity {
 
 
 
-    }
-    public void onRequestPermissionsResult(int requestCode, @NonNull  String[] permissions, @NonNull int[] grantResults) {
-        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-        if(requestCode==101 && grantResults.length>0 && grantResults[0]==PackageManager.PERMISSION_GRANTED){
-            sendmessage();
-        }
-        else{
-            Toast.makeText(getApplicationContext(),"Permission deny",Toast.LENGTH_LONG).show();
-        }
     }
 
 }

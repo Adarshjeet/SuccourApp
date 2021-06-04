@@ -202,7 +202,7 @@ public class Needer extends FragmentActivity implements OnMapReadyCallback,
                             if (dataSnapshot.exists()){
                                 userToken = dataSnapshot.getValue(String.class);
                                 sendNotification();
-                                //Toast.makeText(getApplicationContext(),userToken,Toast.LENGTH_LONG).show();
+                                Toast.makeText(getApplicationContext(),userToken,Toast.LENGTH_LONG).show();
                             }
                         }
 

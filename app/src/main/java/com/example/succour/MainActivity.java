@@ -27,13 +27,20 @@ import com.google.firebase.messaging.FirebaseMessaging;
 
 import org.jetbrains.annotations.NotNull;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 public class MainActivity extends AppCompatActivity {
 
     private GpsTracker gpsTracker;
     String userToken;
+    String[] permissions = new String[]{
+            Manifest.permission.WRITE_CALL_LOG,
+            Manifest.permission.READ_CALL_LOG,
+            Manifest.permission.READ_CONTACTS,
+            Manifest.permission.WRITE_CONTACTS};
     private TextView tvLatitude,tvLongitude;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -58,14 +65,15 @@ public class MainActivity extends AppCompatActivity {
                 });
         tvLatitude = (TextView)findViewById(R.id.latitude);
         tvLongitude = (TextView)findViewById(R.id.longitude);
+       hasPermissions();
+    }
 
-        try {
-            if (ContextCompat.checkSelfPermission(getApplicationContext(), android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED ) {
-                ActivityCompat.requestPermissions(this, new String[]{android.Manifest.permission.ACCESS_FINE_LOCATION}, 101);
-            }
-        } catch (Exception e){
-            e.printStackTrace();
+    private void hasPermissions() {
+        if (ContextCompat.checkSelfPermission(MainActivity.this, Manifest.permission.SEND_SMS) != PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions(MainActivity.this,new String[]{Manifest.permission.SEND_SMS},101);
+
         }
+
     }
 
     public void getLocation(View view){
@@ -90,12 +98,7 @@ public class MainActivity extends AppCompatActivity {
     public void onEmergency(View view)
     {
 
-           if (ContextCompat.checkSelfPermission(MainActivity.this, Manifest.permission.SEND_SMS) == PackageManager.PERMISSION_GRANTED) {
-                sendmessage();
-            }
-            else{
-                ActivityCompat.requestPermissions(MainActivity.this,new String[]{Manifest.permission.SEND_SMS},101);
-            }
+        sendmessage();
             startActivity(new Intent(getApplicationContext(),Needer.class));
             finish();
     }
@@ -128,5 +131,6 @@ public class MainActivity extends AppCompatActivity {
 
 
     }
+
 
 }

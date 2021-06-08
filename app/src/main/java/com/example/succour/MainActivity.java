@@ -60,8 +60,8 @@ public class MainActivity extends AppCompatActivity {
         tvLongitude = (TextView)findViewById(R.id.longitude);
 
         try {
-            if (ContextCompat.checkSelfPermission(getApplicationContext(), android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED ) {
-                ActivityCompat.requestPermissions(this, new String[]{android.Manifest.permission.ACCESS_FINE_LOCATION}, 101);
+            if (ContextCompat.checkSelfPermission(getApplicationContext(), Manifest.permission.SEND_SMS) != PackageManager.PERMISSION_GRANTED ) {
+                ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.SEND_SMS}, 101);
             }
         } catch (Exception e){
             e.printStackTrace();
@@ -86,7 +86,6 @@ public class MainActivity extends AppCompatActivity {
     public void onMap(View view)
     {
         startActivity(new Intent(getApplicationContext(), MapsActivity.class));
-        finish();
     }
     public void onEmergency(View view)
     {
@@ -98,7 +97,6 @@ public class MainActivity extends AppCompatActivity {
                 ActivityCompat.requestPermissions(MainActivity.this,new String[]{Manifest.permission.SEND_SMS},101);
             }
             startActivity(new Intent(getApplicationContext(),Needer.class));
-            finish();
     }
     private void sendmessage() {
         String userId = FirebaseAuth.getInstance().getCurrentUser().getUid();
@@ -132,7 +130,7 @@ public class MainActivity extends AppCompatActivity {
     public void onRequestPermissionsResult(int requestCode, @NonNull  String[] permissions, @NonNull int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
         if(requestCode==101 && grantResults.length>0 && grantResults[0]==PackageManager.PERMISSION_GRANTED){
-            sendmessage();
+          //  sendmessage();
         }
         else{
             Toast.makeText(getApplicationContext(),"Permission deny",Toast.LENGTH_LONG).show();

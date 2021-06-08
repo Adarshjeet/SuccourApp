@@ -7,6 +7,12 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
 
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
+
+import java.util.HashMap;
+
 public class Alert extends AppCompatActivity {
     AlertDialog.Builder builder;
     @Override
@@ -18,7 +24,11 @@ public class Alert extends AppCompatActivity {
                 .setPositiveButton("Yes", new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
-                        MapsActivity.i=1;
+                        String userId = FirebaseAuth.getInstance().getCurrentUser().getUid();
+                        DatabaseReference reference = FirebaseDatabase.getInstance().getReference().child("User Info").child(userId);
+                        HashMap map = new HashMap();
+                        map.put("ready","true");
+                        reference.updateChildren(map);
                         startActivity(new Intent(getApplicationContext(),MapsActivity.class));
                     }
                 })

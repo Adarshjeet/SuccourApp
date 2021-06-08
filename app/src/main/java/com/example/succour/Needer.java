@@ -88,6 +88,13 @@ public class Needer extends FragmentActivity implements OnMapReadyCallback,
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_needer);
+        try {
+            if (ContextCompat.checkSelfPermission(getApplicationContext(), android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED ) {
+                ActivityCompat.requestPermissions(this, new String[]{android.Manifest.permission.ACCESS_FINE_LOCATION}, 101);
+            }
+        } catch (Exception e){
+            e.printStackTrace();
+        }
         search = (Button)findViewById(R.id.help);
         // Obtain the SupportMapFragment and get notified when the map is ready to be used.
         polylines = new ArrayList<>();
@@ -201,7 +208,7 @@ public class Needer extends FragmentActivity implements OnMapReadyCallback,
 
                             if (dataSnapshot.exists()){
                                 userToken = dataSnapshot.getValue(String.class);
-                                //sendNotification();
+                                sendNotification();
                                 //Toast.makeText(getApplicationContext(),userToken,Toast.LENGTH_LONG).show();
                             }
                         }

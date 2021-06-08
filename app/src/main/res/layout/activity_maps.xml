@@ -11,18 +11,26 @@
         android:onClick="Logout"
         android:textSize="30sp"
         android:text="Logout"/>
-    <Button
-        android:layout_width="match_parent"
+   <Button
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:id="@+id/helpMe"
-        android:textSize="30sp"
-        android:onClick="Need"
-        android:layout_gravity="bottom"
-        android:text="Need Help"/>
-
+        android:textSize="15sp"
+        android:layout_gravity="bottom|left"
+        />
+    <Button
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/call"
+        android:onClick="callingPhone"
+        android:textSize="20sp"
+        android:text="Call"
+        android:layout_gravity="bottom|right"
+        />
     <fragment
         android:id="@+id/map"
         android:name="com.google.android.gms.maps.SupportMapFragment"
         android:layout_width="match_parent"
         android:layout_height="match_parent" />
+
 </FrameLayout>

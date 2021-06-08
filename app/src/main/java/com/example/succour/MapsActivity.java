@@ -2,6 +2,7 @@ package com.example.succour;
 
 
 import android.content.Intent;
+import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 
@@ -26,11 +27,15 @@ import com.google.android.gms.location.LocationServices;
 import android.location.Location;
 import android.Manifest;
 import android.content.pm.PackageManager;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
+import android.widget.EditText;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
+import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 import androidx.fragment.app.FragmentActivity;
 
@@ -49,6 +54,7 @@ import com.google.firebase.database.ValueEventListener;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 
 
@@ -60,38 +66,52 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     Location mLastLocation;
     Marker helpMarker;
     LatLng helperLatlng;
-    Button click;
+    String neederId;
+    LatLng pick;
+    String userId = FirebaseAuth.getInstance().getCurrentUser().getUid();
     private List<Polyline> polylines;
     private static final int[] COLORS = new int[]{R.color.primary_dark_material_light};
     Marker mCurrLocationMarker;
     GoogleApiClient mGoogleApiClient;
     LocationRequest mLocationRequest;
-    public static int i=0;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        click = (Button)findViewById(R.id.helpMe);
+
+        //click = (Button)findViewById(R.id.helpMe);
         setContentView(R.layout.activity_maps);
-        b = (Button)findViewById(R.id.helpMe);
+        //  showDetails();
+        b = (Button) findViewById(R.id.helpMe);
         // Obtain the SupportMapFragment and get notified when the map is ready to be used.
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
                 .findFragmentById(R.id.map);
         mapFragment.getMapAsync(this);
-        if(i==0){
-            b.setVisibility(View.INVISIBLE);
-        }
-        else {
-            b.setVisibility(View.VISIBLE);
-            i = 0;
-        }
+        DatabaseReference ref = FirebaseDatabase.getInstance().getReference().child("User Info").child(userId).child("ready");
+        ref.addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull @NotNull DataSnapshot snapshot) {
+                if (snapshot.exists()) {
+                    String ready = snapshot.getValue(String.class);
+                    if (ready.equals("true")) Need();
+
+                } else
+                    b.setText("No needer requested you");
+            }
+
+            @Override
+            public void onCancelled(@NonNull @NotNull DatabaseError error) {
+
+            }
+        });
+
 
     }
 
     @Override
     public void onMapReady(GoogleMap googleMap) {
         mMap = googleMap;
-
+        mMap.setMapType(GoogleMap.MAP_TYPE_HYBRID);
         if (android.os.Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             if (ContextCompat.checkSelfPermission(this,
                     Manifest.permission.ACCESS_FINE_LOCATION)
@@ -99,13 +119,12 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 buildGoogleApiClient();
                 mMap.setMyLocationEnabled(true);
             }
-        }
-        else {
+        } else {
             buildGoogleApiClient();
             mMap.setMyLocationEnabled(true);
         }
-
     }
+
     protected synchronized void buildGoogleApiClient() {
         mGoogleApiClient = new GoogleApiClient.Builder(this)
                 .addConnectionCallbacks(this)
@@ -152,12 +171,12 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         //move map camera
         mMap.moveCamera(CameraUpdateFactory.newLatLng(latLng));
         mMap.animateCamera(CameraUpdateFactory.zoomTo(11));
-        String userId = FirebaseAuth.getInstance().getCurrentUser().getUid();
+
         DatabaseReference ref = FirebaseDatabase.getInstance().getReference().child("Helper Available");
         GeoFire geofire = new GeoFire(ref);
-        geofire.setLocation(userId,new GeoLocation(location.getLatitude(),location.getLongitude()));
+        geofire.setLocation(userId, new GeoLocation(location.getLatitude(), location.getLongitude()));
         //stop location updates
-        
+
 
     }
 
@@ -165,43 +184,46 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     public void onConnectionFailed(ConnectionResult connectionResult) {
 
     }
-    String userId = FirebaseAuth.getInstance().getCurrentUser().getUid();
-    String neederId;
-    LatLng pick;
-    public void Need(View view)
-    {
 
-       // Toast.makeText(getApplicationContext(),userId,Toast.LENGTH_LONG).show();
+    public void Need() {
+
+        // Toast.makeText(getApplicationContext(),userId,Toast.LENGTH_LONG).show();
         DatabaseReference data = FirebaseDatabase.getInstance().getReference().child("User Info").child(userId).child("needer id");
         data.addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot snapshot) {
-                if (snapshot.exists()){
+                if (snapshot.exists()) {
                     neederId = snapshot.getValue(String.class);
+                    DatabaseReference reference = FirebaseDatabase.getInstance().getReference().child("User Info").child(neederId);
+                    HashMap map = new HashMap();
+                    map.put("helping", "true");
+                    reference.updateChildren(map);
                     DatabaseReference needRef = FirebaseDatabase.getInstance().getReference().child("Needer").child(neederId).child("l");
                     needRef.addValueEventListener(new ValueEventListener() {
                         @Override
                         public void onDataChange(@NotNull DataSnapshot snapshot) {
-                            if(snapshot.exists()){
-                                List<Object> map = (List<Object>)snapshot.getValue();
+                            if (snapshot.exists()) {
+                                List<Object> map = (List<Object>) snapshot.getValue();
                                 double locationLat = 0;
                                 double locationLng = 0;
-                                if(map.get(0)!= null) {
+                                if (map.get(0) != null) {
                                     locationLat = Double.parseDouble(map.get(0).toString());
                                 }
-                                if(map.get(1)!= null){
+                                if (map.get(1) != null) {
                                     locationLng = Double.parseDouble(map.get(1).toString());
                                 }
-                                pick = new LatLng(locationLat,locationLng);
+                                pick = new LatLng(locationLat, locationLng);
 
-                                if(helpMarker!=null){
+                                if (helpMarker != null) {
                                     helpMarker.remove();
                                 }
-                                helpMarker= mMap.addMarker(new MarkerOptions().position(pick).title("I want help"));
+                                helpMarker = mMap.addMarker(new MarkerOptions().position(pick).title("I want help"));
+
+
+                                // showDetails();
                                 getRouteToMarker(pick);
-                            }
-                            else{
-                                Toast.makeText(getApplicationContext(),"failed",Toast.LENGTH_LONG).show();
+                            } else {
+                                Toast.makeText(getApplicationContext(), "Currently no needer requesting you", Toast.LENGTH_LONG).show();
                             }
                         }
 
@@ -210,10 +232,29 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
                         }
                     });
+                    DatabaseReference ref = FirebaseDatabase.getInstance().getReference().child("User Info").child(neederId);
+                    ref.addValueEventListener(new ValueEventListener() {
+                        @Override
+                        public void onDataChange(@NonNull @NotNull DataSnapshot snapshot) {
+                            if (snapshot.exists()) {
 
-                }
-                else{
-                    Toast.makeText(getApplicationContext(),"failed",Toast.LENGTH_LONG).show();
+                                String name = snapshot.child("name").getValue(String.class);
+                                String phone = snapshot.child("phone").getValue(String.class);
+                                b.setText("Name: " + name + "\nContact: " + phone);
+
+                            }
+
+                        }
+
+
+                        @Override
+                        public void onCancelled(@NonNull @NotNull DatabaseError error) {
+
+                        }
+                    });
+
+                } else {
+                    Toast.makeText(getApplicationContext(), "failed", Toast.LENGTH_LONG).show();
                 }
             }
 
@@ -223,19 +264,21 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             }
         });
     }
-    public void Logout(View view)
-    {
+
+
+    public void Logout(View view) {
         FirebaseAuth.getInstance().signOut();
-        startActivity(new Intent(getApplicationContext(),Login.class));
+        startActivity(new Intent(getApplicationContext(), Login.class));
         finish();
     }
-    private void getRouteToMarker(LatLng pick){
-        Toast.makeText(getApplicationContext(),String.valueOf(pick.longitude),Toast.LENGTH_LONG).show();
-       Routing routing = new Routing.Builder()
+
+    private void getRouteToMarker(LatLng pick) {
+        Toast.makeText(getApplicationContext(), String.valueOf(pick.longitude), Toast.LENGTH_LONG).show();
+        Routing routing = new Routing.Builder()
                 .travelMode(AbstractRouting.TravelMode.DRIVING)
                 .withListener(this)
                 .alternativeRoutes(true)
-                .waypoints(helperLatlng,pick)
+                .waypoints(helperLatlng, pick)
                 .key("AIzaSyDGA6Y29R7ZmpYjmEiku_UJE2vPrHvfiMc")  //also define your api key here.
                 .build();
         routing.execute();
@@ -244,9 +287,9 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
     @Override
     public void onRoutingFailure(RouteException e) {
-        if(e != null) {
+        if (e != null) {
             Toast.makeText(this, "Error: " + e.getMessage(), Toast.LENGTH_LONG).show();
-        }else {
+        } else {
             Toast.makeText(this, "Something went wrong, Try again", Toast.LENGTH_SHORT).show();
         }
     }
@@ -263,11 +306,11 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 poly.remove();
             }
         }*/
-        Toast.makeText(getApplicationContext(),"come",Toast.LENGTH_LONG).show();
+        Toast.makeText(getApplicationContext(), "come", Toast.LENGTH_LONG).show();
 
         polylines = new ArrayList<>();
         //add route(s) to the map.
-        for (int i = 0; i <route.size(); i++) {
+        for (int i = 0; i < route.size(); i++) {
 
             //In case of more than 5 alternative routes
             int colorIndex = i % COLORS.length;
@@ -278,8 +321,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             polyOptions.addAll(route.get(i).getPoints());
             Polyline polyline = mMap.addPolyline(polyOptions);
             polylines.add(polyline);
-
-            Toast.makeText(getApplicationContext(),"Route "+ (i+1) +": distance - "+ route.get(i).getDistanceValue()+": duration - "+ route.get(i).getDurationValue(),Toast.LENGTH_SHORT).show();
+            Toast.makeText(getApplicationContext(), "Route " + (i + 1) + ": distance - " + route.get(i).getDistanceValue() + ": duration - " + route.get(i).getDurationValue(), Toast.LENGTH_SHORT).show();
         }
     }
 
@@ -287,12 +329,49 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     public void onRoutingCancelled() {
 
     }
-    private void erasePolyLines(){
-        for(Polyline line : polylines){
-            line.remove();
 
+    private void erasePolyLines() {
+        for (Polyline line : polylines) {
+            line.remove();
         }
         polylines.clear();
     }
 
+    public void callingPhone(View view) {
+        DatabaseReference data = FirebaseDatabase.getInstance().getReference().child("User Info").child(userId).child("needer id");
+        data.addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot snapshot) {
+                if (snapshot.exists()) {
+                    neederId = snapshot.getValue(String.class);
+                    DatabaseReference reference = FirebaseDatabase.getInstance().getReference().child("User Info").child(neederId).child("phone");
+                    reference.addValueEventListener(new ValueEventListener() {
+                        @Override
+                        public void onDataChange(@NonNull @NotNull DataSnapshot snapshot) {
+                            if(snapshot.exists()){
+                                String contact = snapshot.getValue(String.class);
+                                Toast.makeText(getApplicationContext(),contact,Toast.LENGTH_LONG).show();
+                                Intent intent = new Intent(Intent.ACTION_DIAL);
+                                intent.setData(Uri.parse("tel:"+contact));
+                                startActivity(intent);
+                            }
+                        }
+
+                        @Override
+                        public void onCancelled(@NonNull @NotNull DatabaseError error) {
+
+                        }
+                    });
+                }
+
+            }
+
+            @Override
+            public void onCancelled(@NonNull @NotNull DatabaseError error) {
+
+            }
+
+            ;
+        });
+    }
 }

@@ -10,9 +10,12 @@ import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.text.TextUtils;
 import android.view.View;
+import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ProgressBar;
+import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -24,8 +27,11 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.messaging.FirebaseMessaging;
 
+import java.util.ArrayList;
+import java.util.List;
 
-public class Register extends AppCompatActivity {
+
+public class Register extends AppCompatActivity implements AdapterView.OnItemSelectedListener {
 
     EditText mFullName,mEmail,mPassword,mPhone,mContact;
     Button mRegisterBtn;
@@ -35,18 +41,12 @@ public class Register extends AppCompatActivity {
     DatabaseReference reference;
     String userToken;
     ProgressBar progressBar;
-
+    String item="others";
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        try {
-            if (ContextCompat.checkSelfPermission(getApplicationContext(), android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED ) {
-                ActivityCompat.requestPermissions(this, new String[]{android.Manifest.permission.ACCESS_FINE_LOCATION}, 101);
-            }
-        } catch (Exception e){
-            e.printStackTrace();
-        }
         setContentView(R.layout.activity_register);
+
         try {
             if (ContextCompat.checkSelfPermission(getApplicationContext(), android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED ) {
                 ActivityCompat.requestPermissions(this, new String[]{android.Manifest.permission.ACCESS_FINE_LOCATION}, 101);
@@ -112,6 +112,10 @@ public class Register extends AppCompatActivity {
                     mPhone.setError("Phone no. is Required.");
                     return;
                 }
+                if(TextUtils.isEmpty(name)){
+                    mFullName.setError("Name is required");
+                    return;
+                }
                 if(TextUtils.isEmpty(contact)){
                     mContact.setError("Emergency Contact is Required.");
                     return;
@@ -141,7 +145,7 @@ public class Register extends AppCompatActivity {
                             rootnode = FirebaseDatabase.getInstance();
                             reference = rootnode.getReference("User Info");
 
-                            Helper helper = new Helper(name,email,password,phone,userToken,contact);
+                            Helper helper = new Helper(name,email,password,phone,userToken,contact,item);
                             String userId =FirebaseAuth.getInstance().getCurrentUser().getUid();
                             reference.child(userId).setValue(helper);
                             Toast.makeText(Register.this, "Register Successfull", Toast.LENGTH_SHORT).show();
@@ -166,6 +170,36 @@ public class Register extends AppCompatActivity {
                 finish();
             }
         });
+        Spinner spinner = (Spinner) findViewById(R.id.spinner);
 
+        // Spinner click listener
+        spinner.setOnItemSelectedListener(this);
+
+        // Spinner Drop down elements
+        List<String> categories = new ArrayList<String>();
+        categories.add("Others");
+        categories.add("Doctor");
+        categories.add("Motor Mechanic");
+
+        // Creating adapter for spinner
+        ArrayAdapter<String> dataAdapter = new ArrayAdapter<String>(this, android.R.layout.simple_spinner_item, categories);
+
+        // Drop down layout style - list view with radio button
+        dataAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+
+        // attaching data adapter to spinner
+        spinner.setAdapter(dataAdapter);
+    }
+
+    @Override
+    public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+        // On selecting a spinner item
+        item = parent.getItemAtPosition(position).toString();
+
+        // Showing selected spinner item
+       // Toast.makeText(parent.getContext(), "Selected: " + item, Toast.LENGTH_LONG).show();
+    }
+    public void onNothingSelected(AdapterView<?> arg0) {
+        // TODO Auto-generated method stub
     }
 }

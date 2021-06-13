@@ -1,15 +1,21 @@
 package com.example.succour;
 
+import androidx.annotation.NonNull;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
+import androidx.fragment.app.FragmentActivity;
+
 import android.Manifest;
-import android.app.PendingIntent;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.location.Location;
+import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
-import android.telephony.SmsManager;
 import android.view.View;
 import android.widget.Button;
+import android.widget.ImageButton;
 import android.widget.Toast;
 
 import com.directions.route.AbstractRouting;
@@ -25,32 +31,23 @@ import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.location.LocationListener;
 import com.google.android.gms.location.LocationRequest;
-import com.google.android.gms.maps.CameraUpdateFactory;
-import com.google.android.gms.maps.SupportMapFragment;
-import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.LocationServices;
+import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
+import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.maps.model.Polyline;
 import com.google.android.gms.maps.model.PolylineOptions;
-import com.google.android.gms.tasks.OnCompleteListener;
-import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
-import com.google.firebase.messaging.FirebaseMessaging;
-
-import androidx.annotation.NonNull;
-import androidx.core.app.ActivityCompat;
-import androidx.core.content.ContextCompat;
-import androidx.fragment.app.FragmentActivity;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -60,7 +57,7 @@ import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
 
-public class Needer extends FragmentActivity implements OnMapReadyCallback,
+public class AdditionalFeature extends FragmentActivity implements OnMapReadyCallback,
         LocationListener, GoogleApiClient.ConnectionCallbacks,
         GoogleApiClient.OnConnectionFailedListener, RoutingListener {
 
@@ -80,6 +77,8 @@ public class Needer extends FragmentActivity implements OnMapReadyCallback,
     private Marker helpMarker;
     LatLng helperLatLng;
     boolean flag=false;
+    Button distance;
+    ImageButton call;
     private List<Polyline> polylines;
     private static final int[] COLORS = new int[]{R.color.primary_dark_material_light};
 
@@ -87,7 +86,7 @@ public class Needer extends FragmentActivity implements OnMapReadyCallback,
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_needer);
+        setContentView(R.layout.activity_additional_feature);
         try {
             if (ContextCompat.checkSelfPermission(getApplicationContext(), android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED ) {
                 ActivityCompat.requestPermissions(this, new String[]{android.Manifest.permission.ACCESS_FINE_LOCATION}, 101);
@@ -95,10 +94,15 @@ public class Needer extends FragmentActivity implements OnMapReadyCallback,
         } catch (Exception e){
             e.printStackTrace();
         }
-        search = (Button)findViewById(R.id.help);
+        search = (Button)findViewById(R.id.button7);
+        search.setVisibility(View.INVISIBLE);
+        call = (ImageButton)findViewById(R.id.imageButton);
+        call.setVisibility(View.INVISIBLE);
+        distance = (Button)findViewById(R.id.button8);
+        distance.setVisibility(View.INVISIBLE);
         // Obtain the SupportMapFragment and get notified when the map is ready to be used.
         polylines = new ArrayList<>();
-
+        userId = FirebaseAuth.getInstance().getCurrentUser().getUid();
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
                 .findFragmentById(R.id.map);
         mapFragment.getMapAsync(this);
@@ -165,10 +169,10 @@ public class Needer extends FragmentActivity implements OnMapReadyCallback,
         markerOptions.position(latLng);
         markerOptions.title("Current Position");
         markerOptions.icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_GREEN));
-       // mCurrLocationMarker = mMap.addMarker(markerOptions);
+        // mCurrLocationMarker = mMap.addMarker(markerOptions);
         mMap.moveCamera(CameraUpdateFactory.newLatLng(latLng));
         mMap.animateCamera(CameraUpdateFactory.zoomTo(11));
-        userId = FirebaseAuth.getInstance().getCurrentUser().getUid();
+
         DatabaseReference ref = FirebaseDatabase.getInstance().getReference().child("Needer");
         GeoFire geofire = new GeoFire(ref);
         geofire.setLocation(userId,new GeoLocation(location.getLatitude(),location.getLongitude()));
@@ -185,12 +189,16 @@ public class Needer extends FragmentActivity implements OnMapReadyCallback,
         finish();
     }
     public void Search(View view){
-        getHelper();
+        getHelper("Motor Mechanic");
+    }
+    public  void Doctor(View view){
+        getHelper("Doctor");
     }
 
-    private void getHelper(){
+    private void getHelper(String key1){
+        search.setVisibility(View.VISIBLE);
         search.setText("Searching........");
-        DatabaseReference helperReference = FirebaseDatabase.getInstance().getReference().child("Helper Available");
+        DatabaseReference helperReference = FirebaseDatabase.getInstance().getReference().child(key1);
         GeoFire geofire = new GeoFire(helperReference);
         GeoQuery geoQuery = geofire.queryAtLocation(new GeoLocation(pickUp.latitude, pickUp.longitude),radius);
         geoQuery.removeAllListeners();
@@ -208,7 +216,7 @@ public class Needer extends FragmentActivity implements OnMapReadyCallback,
 
                             if (dataSnapshot.exists()){
                                 userToken = dataSnapshot.getValue(String.class);
-                                sendNotification();
+                                 sendNotification();
                                 //Toast.makeText(getApplicationContext(),userToken,Toast.LENGTH_LONG).show();
                             }
                         }
@@ -225,7 +233,7 @@ public class Needer extends FragmentActivity implements OnMapReadyCallback,
                     HashMap map = new HashMap();
                     map.put("needer id",userId);
                     reference.updateChildren(map);
-                    search.setText("found"+key+"waiting for response");
+                    search.setText("found and waiting for response");
                     Timer timer = new Timer();
                     timer.schedule(new TimerTask() {
                         @Override
@@ -236,9 +244,32 @@ public class Needer extends FragmentActivity implements OnMapReadyCallback,
                                 public void onDataChange(@NonNull @NotNull DataSnapshot snapshot) {
                                     if(snapshot.exists()){
                                         String s=snapshot.getValue(String.class);
-                                        if(s.equals("true"))getHelperLocation();
-                                        else{
-                                            getHelper();
+                                        if(s.equals("true")) {
+                                            DatabaseReference help = FirebaseDatabase.getInstance().getReference().child("User Info").child(key);
+                                            help.addValueEventListener(new ValueEventListener() {
+                                                @Override
+                                                public void onDataChange(@NonNull @NotNull DataSnapshot snapshot) {
+                                                    if (snapshot.exists()) {
+
+                                                        String name = snapshot.child("name").getValue(String.class);
+                                                        String phone = snapshot.child("phone").getValue(String.class);
+                                                        search.setText("Name: " + name + "\nContact: " + phone);
+                                                        call.setVisibility(View.VISIBLE);
+
+                                                    }
+
+                                                }
+
+
+                                                @Override
+                                                public void onCancelled(@NonNull @NotNull DatabaseError error) {
+
+                                                }
+                                            });
+
+                                            getHelperLocation(key1);
+                                        }else{
+                                            getHelper(key1);
                                             radius =1;
                                             helperFound= false;}
                                     }
@@ -267,12 +298,11 @@ public class Needer extends FragmentActivity implements OnMapReadyCallback,
 
             @Override
             public void onGeoQueryReady() {
-                    if(!helperFound){
-                        radius++;
+                if(!helperFound){
+                    radius++;
+                    getHelper(key1);
 
-                        getHelper();
-
-                    }
+                }
             }
 
             @Override
@@ -281,21 +311,18 @@ public class Needer extends FragmentActivity implements OnMapReadyCallback,
             }
         });
     }
-
-
-
     private void sendNotification() {
-        FcmNotificationsSender fcmNotificationsSender = new FcmNotificationsSender(userToken,"Emergency","I am in emergency please help", getApplicationContext(), Needer.this);
+        FcmNotificationsSender fcmNotificationsSender = new FcmNotificationsSender(userToken,"Emergency","I am in emergency please help", getApplicationContext(), AdditionalFeature.this);
         fcmNotificationsSender.SendNotifications();
     }
 
-    private void getHelperLocation(){
-        DatabaseReference refHelper = FirebaseDatabase.getInstance().getReference().child("Helper Available").child(helperFoundId).child("l");
+    private void getHelperLocation(String key1){
+        DatabaseReference refHelper = FirebaseDatabase.getInstance().getReference().child(key1).child(helperFoundId).child("l");
         refHelper.addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(@NotNull DataSnapshot snapshot) {
                 if(snapshot.exists()){
-                    Toast.makeText(getApplicationContext(),"king2",Toast.LENGTH_LONG).show();
+                  //  Toast.makeText(getApplicationContext(),"king2",Toast.LENGTH_LONG).show();
                     List<Object> map = (List<Object>)snapshot.getValue();
                     double locationLat = 0;
                     double locationLng = 0;
@@ -345,7 +372,7 @@ public class Needer extends FragmentActivity implements OnMapReadyCallback,
 
     @Override
     public void onRoutingStart() {
-            Toast.makeText(this,s,Toast.LENGTH_LONG).show();
+        Toast.makeText(this,s,Toast.LENGTH_LONG).show();
     }
 
     @Override
@@ -370,7 +397,8 @@ public class Needer extends FragmentActivity implements OnMapReadyCallback,
             polyOptions.addAll(route.get(i).getPoints());
             Polyline polyline = mMap.addPolyline(polyOptions);
             polylines.add(polyline);
-
+            distance.setVisibility(View.VISIBLE);
+            distance.setText("Distance: "+String.valueOf(route.get(i).getDistanceValue()/1000)+"Km\nTime:"+String.valueOf(route.get(i).getDurationValue()/60)+"minute");
             Toast.makeText(getApplicationContext(),"Route "+ (i+1) +": distance - "+ route.get(i).getDistanceValue()+": duration - "+ route.get(i).getDurationValue(),Toast.LENGTH_SHORT).show();
             break;
         }
@@ -386,5 +414,25 @@ public class Needer extends FragmentActivity implements OnMapReadyCallback,
 
         }
         polylines.clear();
+    }
+    public void calling(View view){
+        DatabaseReference data = FirebaseDatabase.getInstance().getReference().child("User Info").child(helperFoundId).child("phone");
+        data.addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot snapshot) {
+                if (snapshot.exists()) {
+                                String contact = snapshot.getValue(String.class);
+                                Toast.makeText(getApplicationContext(),contact,Toast.LENGTH_LONG).show();
+                                Intent intent = new Intent(Intent.ACTION_DIAL);
+                                intent.setData(Uri.parse("tel:"+contact));
+                                startActivity(intent);
+                            }
+                        }
+
+                        @Override
+                        public void onCancelled(@NonNull @NotNull DatabaseError error) {
+
+                        }
+                    });
     }
 }

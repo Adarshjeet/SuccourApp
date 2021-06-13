@@ -78,12 +78,8 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
-        //click = (Button)findViewById(R.id.helpMe);
         setContentView(R.layout.activity_maps);
-        //  showDetails();
         b = (Button) findViewById(R.id.helpMe);
-        // Obtain the SupportMapFragment and get notified when the map is ready to be used.
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
                 .findFragmentById(R.id.map);
         mapFragment.getMapAsync(this);
@@ -171,10 +167,28 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         //move map camera
         mMap.moveCamera(CameraUpdateFactory.newLatLng(latLng));
         mMap.animateCamera(CameraUpdateFactory.zoomTo(11));
-
         DatabaseReference ref = FirebaseDatabase.getInstance().getReference().child("Helper Available");
         GeoFire geofire = new GeoFire(ref);
         geofire.setLocation(userId, new GeoLocation(location.getLatitude(), location.getLongitude()));
+        //stop location updates
+        DatabaseReference occ = FirebaseDatabase.getInstance().getReference().child("User Info").child(userId).child("occupation");
+        occ.addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull @NotNull DataSnapshot snapshot) {
+                if(snapshot.exists()){
+                    String occupation=snapshot.getValue(String.class);
+                    DatabaseReference refer = FirebaseDatabase.getInstance().getReference().child(occupation);
+                    GeoFire geofire1 = new GeoFire(refer);
+                    geofire1.setLocation(userId, new GeoLocation(location.getLatitude(), location.getLongitude()));
+                }
+            }
+
+            @Override
+            public void onCancelled(@NonNull @NotNull DatabaseError error) {
+
+            }
+        });
+
         //stop location updates
 
 
@@ -194,6 +208,26 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             public void onDataChange(@NonNull DataSnapshot snapshot) {
                 if (snapshot.exists()) {
                     neederId = snapshot.getValue(String.class);
+                    DatabaseReference ref = FirebaseDatabase.getInstance().getReference().child("User Info").child(neederId);
+                    ref.addValueEventListener(new ValueEventListener() {
+                        @Override
+                        public void onDataChange(@NonNull @NotNull DataSnapshot snapshot) {
+                            if (snapshot.exists()) {
+
+                                String name = snapshot.child("name").getValue(String.class);
+                                String phone = snapshot.child("phone").getValue(String.class);
+                                b.setText("Name: " + name + "\nContact: " + phone);
+
+                            }
+
+                        }
+
+
+                        @Override
+                        public void onCancelled(@NonNull @NotNull DatabaseError error) {
+
+                        }
+                    });
                     DatabaseReference reference = FirebaseDatabase.getInstance().getReference().child("User Info").child(neederId);
                     HashMap map = new HashMap();
                     map.put("helping", "true");
@@ -218,9 +252,6 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                                     helpMarker.remove();
                                 }
                                 helpMarker = mMap.addMarker(new MarkerOptions().position(pick).title("I want help"));
-
-
-                                // showDetails();
                                 getRouteToMarker(pick);
                             } else {
                                 Toast.makeText(getApplicationContext(), "Currently no needer requesting you", Toast.LENGTH_LONG).show();
@@ -232,26 +263,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
                         }
                     });
-                    DatabaseReference ref = FirebaseDatabase.getInstance().getReference().child("User Info").child(neederId);
-                    ref.addValueEventListener(new ValueEventListener() {
-                        @Override
-                        public void onDataChange(@NonNull @NotNull DataSnapshot snapshot) {
-                            if (snapshot.exists()) {
 
-                                String name = snapshot.child("name").getValue(String.class);
-                                String phone = snapshot.child("phone").getValue(String.class);
-                                b.setText("Name: " + name + "\nContact: " + phone);
-
-                            }
-
-                        }
-
-
-                        @Override
-                        public void onCancelled(@NonNull @NotNull DatabaseError error) {
-
-                        }
-                    });
 
                 } else {
                     Toast.makeText(getApplicationContext(), "failed", Toast.LENGTH_LONG).show();

@@ -1,9 +1,28 @@
 package com.example.succour;
 public class Helper {
-    String name,email,password,phone,Token,contact,occupation;
+    String name,email,password,phone,Token,contact,occupation,blood;
 
     public String getToken() {
         return Token;
+    }
+
+    public String getBlood() {
+        return blood;
+    }
+
+    public Helper(String name, String email, String password, String phone, String token, String contact, String occupation, String blood) {
+        this.name = name;
+        this.email = email;
+        this.password = password;
+        this.phone = phone;
+        this.Token = token;
+        this.contact = contact;
+        this.occupation = occupation;
+        this.blood = blood;
+    }
+
+    public void setBlood(String blood) {
+        this.blood = blood;
     }
 
     public void setToken(String token) {
@@ -26,15 +45,6 @@ public class Helper {
         this.occupation = occupation;
     }
 
-    public Helper(String name, String email, String password, String phone, String Token, String contact, String occupation) {
-        this.name = name;
-        this.email = email;
-        this.password = password;
-        this.phone = phone;
-        this.Token = Token;
-        this.contact= contact;
-        this.occupation = occupation;
-    }
 
     public Helper() {
 

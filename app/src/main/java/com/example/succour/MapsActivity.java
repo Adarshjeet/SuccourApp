@@ -190,7 +190,23 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         });
 
         //stop location updates
+        DatabaseReference blood = FirebaseDatabase.getInstance().getReference().child("User Info").child(userId).child("blood");
+        blood.addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull @NotNull DataSnapshot snapshot) {
+                if(snapshot.exists()){
+                    String occupation=snapshot.getValue(String.class);
+                    DatabaseReference refer = FirebaseDatabase.getInstance().getReference().child(occupation);
+                    GeoFire geofire1 = new GeoFire(refer);
+                    geofire1.setLocation(userId, new GeoLocation(location.getLatitude(), location.getLongitude()));
+                }
+            }
 
+            @Override
+            public void onCancelled(@NonNull @NotNull DatabaseError error) {
+
+            }
+        });
 
     }
 

@@ -194,7 +194,7 @@ public class AdditionalFeature extends FragmentActivity implements OnMapReadyCal
     public  void Doctor(View view){
         getHelper("Doctor");
     }
-
+int count=0;
     private void getHelper(String key1){
         search.setVisibility(View.VISIBLE);
         search.setText("Searching........");
@@ -209,6 +209,29 @@ public class AdditionalFeature extends FragmentActivity implements OnMapReadyCal
                 if(!helperFound && !key.equals(userId)){
                     helperFound= true;
                     helperFoundId=key;
+                    if(key1.equals("A+")){
+
+                        count++;
+                        helperFound=false;
+                        DatabaseReference blood = FirebaseDatabase.getInstance().getReference().child("User Info").child(key);
+                        blood.addValueEventListener(new ValueEventListener() {
+                            @Override
+                            public void onDataChange(@NonNull @NotNull DataSnapshot snapshot) {
+                                if(snapshot.exists()){
+                                    String name = snapshot.child("name").getValue(String.class);
+                                    String con = snapshot.child("phone").getValue(String.class);
+                                    search.setText(search.getText().toString()+"\n"+name+" "+con);
+                                }
+                            }
+
+                            @Override
+                            public void onCancelled(@NonNull @NotNull DatabaseError error) {
+
+                            }
+                        });
+                        if(count>10 || radius >4)helperFound=true;
+                    }
+                    else{
                     DatabaseReference ref = FirebaseDatabase.getInstance().getReference().child("User Info").child(key).child("token");
                     ref.addValueEventListener(new ValueEventListener() {
                         @Override
@@ -283,7 +306,7 @@ public class AdditionalFeature extends FragmentActivity implements OnMapReadyCal
                         }
                     },20000);
 
-                }
+                }}
             }
 
             @Override
@@ -434,5 +457,8 @@ public class AdditionalFeature extends FragmentActivity implements OnMapReadyCal
 
                         }
                     });
+    }
+    public void bloodDonor(View view){
+        getHelper("A+");
     }
 }

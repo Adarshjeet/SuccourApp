@@ -31,7 +31,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 
-public class Register extends AppCompatActivity implements AdapterView.OnItemSelectedListener {
+public class Register extends AppCompatActivity {
 
     EditText mFullName,mEmail,mPassword,mPhone,mContact;
     Button mRegisterBtn;
@@ -42,6 +42,7 @@ public class Register extends AppCompatActivity implements AdapterView.OnItemSel
     String userToken;
     ProgressBar progressBar;
     String item="others";
+    String item1;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -145,7 +146,7 @@ public class Register extends AppCompatActivity implements AdapterView.OnItemSel
                             rootnode = FirebaseDatabase.getInstance();
                             reference = rootnode.getReference("User Info");
 
-                            Helper helper = new Helper(name,email,password,phone,userToken,contact,item);
+                            Helper helper = new Helper(name,email,password,phone,userToken,contact,item,item1);
                             String userId =FirebaseAuth.getInstance().getCurrentUser().getUid();
                             reference.child(userId).setValue(helper);
                             Toast.makeText(Register.this, "Register Successfull", Toast.LENGTH_SHORT).show();
@@ -163,20 +164,17 @@ public class Register extends AppCompatActivity implements AdapterView.OnItemSel
 
 
 
-        mLoginBtn.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                startActivity(new Intent(getApplicationContext(),Login.class));
-                finish();
-            }
+        mLoginBtn.setOnClickListener(v -> {
+            startActivity(new Intent(getApplicationContext(),Login.class));
+            finish();
         });
         Spinner spinner = (Spinner) findViewById(R.id.spinner);
 
         // Spinner click listener
-        spinner.setOnItemSelectedListener(this);
 
         // Spinner Drop down elements
         List<String> categories = new ArrayList<String>();
+        categories.add(0,"Choose Occupation");
         categories.add("Others");
         categories.add("Doctor");
         categories.add("Motor Mechanic");
@@ -189,17 +187,54 @@ public class Register extends AppCompatActivity implements AdapterView.OnItemSel
 
         // attaching data adapter to spinner
         spinner.setAdapter(dataAdapter);
+        spinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+                item = parent.getItemAtPosition(position).toString();
+                if(item.equals("Choose Occupation"))item="others";
+            }
+
+            @Override
+            public void onNothingSelected(AdapterView<?> parent) {
+
+            }
+        });
+        Spinner spinner1 = (Spinner) findViewById(R.id.spinner1);
+
+        // Spinner Drop down elements
+        List<String> categories1 = new ArrayList<String>();
+        categories1.add(0,"Choose Blood Group");
+        categories1.add("A+");
+        categories1.add("A-");
+        categories1.add("B+");
+        categories1.add("B-");
+        categories1.add("AB+");
+        categories1.add("AB-");
+        categories1.add("O+");
+        categories1.add("O-");
+
+
+        // Creating adapter for spinner
+        ArrayAdapter<String> dataAdapter1 = new ArrayAdapter<String>(this, android.R.layout.simple_spinner_item, categories1);
+
+        // Drop down layout style - list view with radio button
+        dataAdapter1.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+
+        // attaching data adapter to spinner
+        spinner1.setAdapter(dataAdapter1);
+        spinner1.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+                item1 = parent.getItemAtPosition(position).toString();
+                if(item1.equals("Choose Blood Group"))item1="others";
+            }
+
+            @Override
+            public void onNothingSelected(AdapterView<?> parent) {
+
+            }
+        });
+
     }
 
-    @Override
-    public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
-        // On selecting a spinner item
-        item = parent.getItemAtPosition(position).toString();
-
-        // Showing selected spinner item
-       // Toast.makeText(parent.getContext(), "Selected: " + item, Toast.LENGTH_LONG).show();
-    }
-    public void onNothingSelected(AdapterView<?> arg0) {
-        // TODO Auto-generated method stub
-    }
 }

@@ -60,6 +60,8 @@ public class MainActivity extends AppCompatActivity {
                 });
         tvLatitude = (TextView)findViewById(R.id.latitude);
         tvLongitude = (TextView)findViewById(R.id.longitude);
+        tvLatitude.setVisibility(View.INVISIBLE);
+        tvLongitude.setVisibility(View.VISIBLE);
 
         try {
             if (ContextCompat.checkSelfPermission(getApplicationContext(), Manifest.permission.SEND_SMS) != PackageManager.PERMISSION_GRANTED ) {
@@ -72,7 +74,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void getLocation(View view){
-        gpsTracker = new GpsTracker(MainActivity.this);
+        /*gpsTracker = new GpsTracker(MainActivity.this);
         if(gpsTracker.canGetLocation()){
             double latitude = gpsTracker.getLatitude();
             double longitude = gpsTracker.getLongitude();
@@ -83,7 +85,7 @@ public class MainActivity extends AppCompatActivity {
           // startActivity(new Intent(getApplicationContext(),MyProfile.class));
         }else{
             gpsTracker.showSettingsAlert();
-        }
+        }*/
     }
     public void onMap(View view)
     {

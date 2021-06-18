@@ -151,7 +151,7 @@ public class Register extends AppCompatActivity {
                             reference.child(userId).setValue(helper);
                             Toast.makeText(Register.this, "Register Successfull", Toast.LENGTH_SHORT).show();
                             progressBar.setVisibility(View.INVISIBLE);
-                            startActivity(new Intent(getApplicationContext(),MainActivity.class));
+                            startActivity(new Intent(getApplicationContext(),MapsActivity.class));
                             finish();
                         }else {
                             Toast.makeText(Register.this, "Error ! " + task.getException().getMessage(), Toast.LENGTH_SHORT).show();

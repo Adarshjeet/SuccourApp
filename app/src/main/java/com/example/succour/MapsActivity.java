@@ -31,10 +31,12 @@ import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ImageButton;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
+import androidx.appcompat.app.AlertDialog;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 import androidx.fragment.app.FragmentActivity;
@@ -61,7 +63,8 @@ import java.util.List;
 public class MapsActivity extends FragmentActivity implements OnMapReadyCallback,
         LocationListener,GoogleApiClient.ConnectionCallbacks,
         GoogleApiClient.OnConnectionFailedListener, RoutingListener {
-    Button b;
+    Button search,search1,distance;
+    ImageButton call;;
     private GoogleMap mMap;
     Location mLastLocation;
     Marker helpMarker;
@@ -79,7 +82,14 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_maps);
-        b = (Button) findViewById(R.id.helpMe);
+        search = (Button)findViewById(R.id.help);
+        //search.setVisibility(View.INVISIBLE);
+        search1 = (Button)findViewById(R.id.button7);
+        search1.setVisibility(View.INVISIBLE);
+        call = (ImageButton)findViewById(R.id.imageButton);
+        call.setVisibility(View.INVISIBLE);
+        distance = (Button)findViewById(R.id.button8);
+        distance.setVisibility(View.INVISIBLE);
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
                 .findFragmentById(R.id.map);
         mapFragment.getMapAsync(this);
@@ -92,7 +102,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                     if (ready.equals("true")) Need();
 
                 } else
-                    b.setText("No needer requested you");
+                    search.setText("No needer requested you");
             }
 
             @Override
@@ -231,8 +241,11 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                             if (snapshot.exists()) {
 
                                 String name = snapshot.child("name").getValue(String.class);
+                                search.setVisibility(View.INVISIBLE);
                                 String phone = snapshot.child("phone").getValue(String.class);
-                                b.setText("Name: " + name + "\nContact: " + phone);
+                                search1.setVisibility(View.VISIBLE);
+                                search1.setText("Name: " + name + "\nContact: " + phone);
+                                call.setVisibility(View.VISIBLE);
 
                             }
 
@@ -342,14 +355,22 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
             //In case of more than 5 alternative routes
             int colorIndex = i % COLORS.length;
-
+            distance.setVisibility(View.VISIBLE);
             PolylineOptions polyOptions = new PolylineOptions();
             polyOptions.color(getResources().getColor(COLORS[colorIndex]));
             polyOptions.width(10 + i * 3);
             polyOptions.addAll(route.get(i).getPoints());
             Polyline polyline = mMap.addPolyline(polyOptions);
             polylines.add(polyline);
-            Toast.makeText(getApplicationContext(), "Route " + (i + 1) + ": distance - " + route.get(i).getDistanceValue() + ": duration - " + route.get(i).getDurationValue(), Toast.LENGTH_SHORT).show();
+            //Toast.makeText(getApplicationContext(), "Route " + (i + 1) + ": distance - " + route.get(i).getDistanceValue() + ": duration - " + route.get(i).getDurationValue(), Toast.LENGTH_SHORT).show();
+            Integer r = new Integer(route.get(i).getDistanceValue());
+            float dist = r.floatValue();
+            dist = dist/1000;
+            distance.setText( "distance -"+" " + String.valueOf(dist)+ " Km\nduration - "+ String.valueOf(route.get(i).getDurationValue()/60+" Minute"));
+            // Toast.makeText(getApplicationContext(),"Route "+ (i+1) +": distance - "+ route.get(i).getDistanceValue()+": duration - "+ route.get(i).getDurationValue(),Toast.LENGTH_SHORT).show();
+            if(dist<100)
+                finished();
+            break;
         }
     }
 
@@ -401,5 +422,29 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
             ;
         });
+    }
+    public void finished(){
+        final AlertDialog.Builder passwordResetDialog = new AlertDialog.Builder(this);
+        passwordResetDialog.setTitle("Have You Reached?");
+        passwordResetDialog.setPositiveButton("Yes", (dialog, which) -> {
+            undo();
+        });
+        passwordResetDialog.setNegativeButton("No", (dialog, which) -> {
+
+        });
+        passwordResetDialog.show();
+    }
+    public void undo(){
+        Toast.makeText(getApplicationContext(),"Thanks for using our app",Toast.LENGTH_SHORT).show();
+        DatabaseReference ref = FirebaseDatabase.getInstance().getReference().child("User Info").child(userId).child("needer id");
+        ref.removeValue();
+        //ref.child("helping");
+        DatabaseReference ref1 = FirebaseDatabase.getInstance().getReference().child("User Info").child(userId).child("ready");
+        ref1.removeValue();
+        startActivity(new Intent(getApplicationContext(),MainActivity.class));
+    }
+    public void mainPage(View view){
+        startActivity(new Intent(getApplicationContext(),MainActivity.class));
+        finish();
     }
 }

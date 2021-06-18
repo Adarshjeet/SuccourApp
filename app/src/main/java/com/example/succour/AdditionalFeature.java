@@ -1,6 +1,7 @@
 package com.example.succour;
 
 import androidx.annotation.NonNull;
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
@@ -14,8 +15,11 @@ import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.view.View;
+import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.ImageButton;
+import android.widget.Spinner;
 import android.widget.Toast;
 
 import com.directions.route.AbstractRouting;
@@ -77,7 +81,7 @@ public class AdditionalFeature extends FragmentActivity implements OnMapReadyCal
     private Marker helpMarker;
     LatLng helperLatLng;
     boolean flag=false;
-    Button distance;
+    Button distance,doctor,motor,blood;
     ImageButton call;
     private List<Polyline> polylines;
     private static final int[] COLORS = new int[]{R.color.primary_dark_material_light};
@@ -87,6 +91,9 @@ public class AdditionalFeature extends FragmentActivity implements OnMapReadyCal
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_additional_feature);
+        doctor = (Button)findViewById(R.id.btnDoctor);
+        motor = (Button)findViewById(R.id.btnMechanic);
+        blood = (Button)findViewById(R.id.button10);
         try {
             if (ContextCompat.checkSelfPermission(getApplicationContext(), android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED ) {
                 ActivityCompat.requestPermissions(this, new String[]{android.Manifest.permission.ACCESS_FINE_LOCATION}, 101);
@@ -106,6 +113,42 @@ public class AdditionalFeature extends FragmentActivity implements OnMapReadyCal
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
                 .findFragmentById(R.id.map);
         mapFragment.getMapAsync(this);
+        DatabaseReference refer = FirebaseDatabase.getInstance().getReference().child("User Info").child(userId).child("helping");
+        refer.addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull @NotNull DataSnapshot snapshot) {
+                if(snapshot.exists()){
+                    String helpingg = snapshot.getValue(String.class);
+                    assert helpingg != null;
+                    if(helpingg.equals("true")){
+                        DatabaseReference ref = FirebaseDatabase.getInstance().getReference().child("User Info").child(userId).child("keyForHelp");
+                        ref.addValueEventListener(new ValueEventListener() {
+                            @Override
+                            public void onDataChange(@NonNull @NotNull DataSnapshot snapshot) {
+                                String help = snapshot.getValue(String.class);
+                                doctor.setVisibility(View.INVISIBLE);
+                                motor.setVisibility(View.INVISIBLE);
+                                blood.setVisibility(View.INVISIBLE);
+                                if(help.equals("Motor Mechanic"))
+                                    getHelperLocation("Motor Mechanic");
+                                else
+                                    if(help.equals(("Doctor")))getHelperLocation("Doctor");
+                            }
+
+                            @Override
+                            public void onCancelled(@NonNull @NotNull DatabaseError error) {
+
+                            }
+                        });
+                    }
+                }
+            }
+
+            @Override
+            public void onCancelled(@NonNull @NotNull DatabaseError error) {
+
+            }
+        });
 
     }
 
@@ -189,13 +232,20 @@ public class AdditionalFeature extends FragmentActivity implements OnMapReadyCal
         finish();
     }
     public void Search(View view){
+        doctor.setVisibility(View.INVISIBLE);
+        motor.setVisibility(View.INVISIBLE);
+        blood.setVisibility(View.INVISIBLE);
         getHelper("Motor Mechanic");
     }
     public  void Doctor(View view){
-        getHelper("Doctor");
+        doctor.setVisibility(View.INVISIBLE);
+        motor.setVisibility(View.INVISIBLE);
+        blood.setVisibility(View.INVISIBLE);getHelper("Doctor");
     }
 int count=0;
     private void getHelper(String key1){
+        DatabaseReference keys =FirebaseDatabase.getInstance().getReference().child("User Info").child(userId).child("keyForHelp");
+        keys.setValue(key1);
         search.setVisibility(View.VISIBLE);
         search.setText("Searching........");
         DatabaseReference helperReference = FirebaseDatabase.getInstance().getReference().child(key1);
@@ -209,7 +259,9 @@ int count=0;
                 if(!helperFound && !key.equals(userId)){
                     helperFound= true;
                     helperFoundId=key;
-                    if(key1.equals("A+")){
+                    if(key1.equals("A+")||key1.equals("B+")||key1.equals("B-")
+                    ||key1.equals("A-")||key1.equals("O+")||key1.equals("O-")
+                    ||key1.equals("AB-")||key1.equals("AB+")){
 
                         count++;
                         helperFound=false;
@@ -268,6 +320,9 @@ int count=0;
                                     if(snapshot.exists()){
                                         String s=snapshot.getValue(String.class);
                                         if(s.equals("true")) {
+                                            DatabaseReference helper =FirebaseDatabase.getInstance().getReference().child("User Info").child(userId).child("helper");
+                                            helper.setValue(helperFoundId);
+
                                             DatabaseReference help = FirebaseDatabase.getInstance().getReference().child("User Info").child(key);
                                             help.addValueEventListener(new ValueEventListener() {
                                                 @Override
@@ -323,6 +378,10 @@ int count=0;
             public void onGeoQueryReady() {
                 if(!helperFound){
                     radius++;
+                    if(radius>=5){
+                        doctor.setVisibility(View.VISIBLE);
+                        doctor.setText("No nearby User Found");
+                    }
                     getHelper(key1);
 
                 }
@@ -340,6 +399,36 @@ int count=0;
     }
 
     private void getHelperLocation(String key1){
+        DatabaseReference refer1 = FirebaseDatabase.getInstance().getReference().child("User Info").child(userId).child("helper");
+        refer1.addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull @NotNull DataSnapshot snapshot) {
+                if(snapshot.exists()){
+                    helperFoundId = snapshot.getValue(String.class);
+
+        DatabaseReference help = FirebaseDatabase.getInstance().getReference().child("User Info").child(helperFoundId);
+        help.addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull @NotNull DataSnapshot snapshot) {
+                if (snapshot.exists()) {
+
+                    String name = snapshot.child("name").getValue(String.class);
+                    search.setVisibility(View.INVISIBLE);
+                    String phone = snapshot.child("phone").getValue(String.class);
+                    search.setVisibility(View.VISIBLE);
+                    search.setText("Name: " + name + "\nContact: " + phone);
+                    call.setVisibility(View.VISIBLE);
+
+                }
+
+            }
+
+
+            @Override
+            public void onCancelled(@NonNull @NotNull DatabaseError error) {
+
+            }
+        });
         DatabaseReference refHelper = FirebaseDatabase.getInstance().getReference().child(key1).child(helperFoundId).child("l");
         refHelper.addValueEventListener(new ValueEventListener() {
             @Override
@@ -362,6 +451,14 @@ int count=0;
                     }
                     helpMarker= mMap.addMarker(new MarkerOptions().position(helperLatLng).title("your helper here"));
                     getRouteToMarker(pickUp);
+              }
+            }
+
+            @Override
+            public void onCancelled(@NotNull DatabaseError error) {
+
+            }
+        });
                 }
             }
 
@@ -459,6 +556,65 @@ int count=0;
                     });
     }
     public void bloodDonor(View view){
-        getHelper("A+");
+        doctor.setVisibility(View.INVISIBLE);
+        motor.setVisibility(View.INVISIBLE);
+        //blood.setVisibility(View.INVISIBLE);
+        Spinner spinner1 = (Spinner) findViewById(R.id.spinner1);
+
+        // Spinner Drop down elements
+        List<String> categories1 = new ArrayList<String>();
+        categories1.add(0,"Choose Blood Group");
+        categories1.add("A+");
+        categories1.add("A-");
+        categories1.add("B+");
+        categories1.add("B-");
+        categories1.add("AB+");
+        categories1.add("AB-");
+        categories1.add("O+");
+        categories1.add("O-");
+
+
+        // Creating adapter for spinner
+        ArrayAdapter<String> dataAdapter1 = new ArrayAdapter<String>(this, android.R.layout.simple_spinner_item, categories1);
+
+        // Drop down layout style - list view with radio button
+        dataAdapter1.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+
+        // attaching data adapter to spinner
+        spinner1.setAdapter(dataAdapter1);
+        spinner1.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+
+                String item1 = parent.getItemAtPosition(position).toString();
+                if(!item1.equals("Choose Blood Group"))
+                    getHelper(item1);
+            }
+
+            @Override
+            public void onNothingSelected(AdapterView<?> parent) {
+
+            }
+        });
+    }
+    public void finished(){
+        final AlertDialog.Builder passwordResetDialog = new AlertDialog.Builder(this);
+        passwordResetDialog.setTitle("Does Helper Reached?");
+        passwordResetDialog.setPositiveButton("Yes", (dialog, which) -> {
+            undo();
+        });
+        passwordResetDialog.setNegativeButton("No", (dialog, which) -> {
+
+        });
+        passwordResetDialog.show();
+    }
+    public void undo(){
+        Toast.makeText(getApplicationContext(),"Thanks for using our app",Toast.LENGTH_SHORT).show();
+        DatabaseReference ref = FirebaseDatabase.getInstance().getReference().child("User Info").child(userId).child("helper");
+        ref.removeValue();
+        //ref.child("helping");
+        DatabaseReference ref1 = FirebaseDatabase.getInstance().getReference().child("User Info").child(userId).child("helping");
+        ref1.removeValue();
+        startActivity(new Intent(getApplicationContext(),MainActivity.class));
     }
 }

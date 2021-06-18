@@ -5,11 +5,14 @@ import android.app.PendingIntent;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.location.Location;
+import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.telephony.SmsManager;
 import android.view.View;
 import android.widget.Button;
+import android.widget.EditText;
+import android.widget.ImageButton;
 import android.widget.Toast;
 
 import com.directions.route.AbstractRouting;
@@ -38,6 +41,8 @@ import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.maps.model.Polyline;
 import com.google.android.gms.maps.model.PolylineOptions;
 import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.OnFailureListener;
+import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.database.DataSnapshot;
@@ -48,6 +53,7 @@ import com.google.firebase.database.ValueEventListener;
 import com.google.firebase.messaging.FirebaseMessaging;
 
 import androidx.annotation.NonNull;
+import androidx.appcompat.app.AlertDialog;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 import androidx.fragment.app.FragmentActivity;
@@ -66,13 +72,14 @@ public class Needer extends FragmentActivity implements OnMapReadyCallback,
 
     private GoogleMap mMap;
     Location mLastLocation;
-    Button search;
+    Button search,search1,distance;
+    ImageButton call;
     String s;
     Marker mCurrLocationMarker;
     GoogleApiClient mGoogleApiClient;
     LocationRequest mLocationRequest;
     LatLng pickUp;
-    String userId;
+    String userId=FirebaseAuth.getInstance().getCurrentUser().getUid();
     String userToken;
     private int radius = 1;
     private Boolean helperFound =false;
@@ -96,12 +103,38 @@ public class Needer extends FragmentActivity implements OnMapReadyCallback,
             e.printStackTrace();
         }
         search = (Button)findViewById(R.id.help);
+        //search.setVisibility(View.INVISIBLE);
+        search1 = (Button)findViewById(R.id.button7);
+        search1.setVisibility(View.INVISIBLE);
+        call = (ImageButton)findViewById(R.id.imageButton);
+        call.setVisibility(View.INVISIBLE);
+        distance = (Button)findViewById(R.id.button8);
+        distance.setVisibility(View.INVISIBLE);
         // Obtain the SupportMapFragment and get notified when the map is ready to be used.
+        DatabaseReference refer = FirebaseDatabase.getInstance().getReference().child("User Info").child(userId).child("helping");
+        refer.addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull @NotNull DataSnapshot snapshot) {
+                if(snapshot.exists()){
+                    String helpingg = snapshot.getValue(String.class);
+                    assert helpingg != null;
+                    if(helpingg.equals("true")){
+                        getHelperLocation();
+                    }
+                }
+            }
+
+            @Override
+            public void onCancelled(@NonNull @NotNull DatabaseError error) {
+
+            }
+        });
         polylines = new ArrayList<>();
 
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
                 .findFragmentById(R.id.map);
         mapFragment.getMapAsync(this);
+
 
     }
 
@@ -225,7 +258,7 @@ public class Needer extends FragmentActivity implements OnMapReadyCallback,
                     HashMap map = new HashMap();
                     map.put("needer id",userId);
                     reference.updateChildren(map);
-                    search.setText("found"+key+"waiting for response");
+                    search.setText("found waiting for response");
                     Timer timer = new Timer();
                     timer.schedule(new TimerTask() {
                         @Override
@@ -236,7 +269,35 @@ public class Needer extends FragmentActivity implements OnMapReadyCallback,
                                 public void onDataChange(@NonNull @NotNull DataSnapshot snapshot) {
                                     if(snapshot.exists()){
                                         String s=snapshot.getValue(String.class);
-                                        if(s.equals("true"))getHelperLocation();
+                                        if(s.equals("true")){
+                                            DatabaseReference helper =FirebaseDatabase.getInstance().getReference().child("User Info").child(userId).child("helper");
+                                            helper.setValue(helperFoundId);
+                                            DatabaseReference help = FirebaseDatabase.getInstance().getReference().child("User Info").child(key);
+                                            help.addValueEventListener(new ValueEventListener() {
+                                                @Override
+                                                public void onDataChange(@NonNull @NotNull DataSnapshot snapshot) {
+                                                    if (snapshot.exists()) {
+
+                                                        String name = snapshot.child("name").getValue(String.class);
+                                                        search.setVisibility(View.INVISIBLE);
+                                                        String phone = snapshot.child("phone").getValue(String.class);
+                                                        search1.setVisibility(View.VISIBLE);
+                                                        search1.setText("Name: " + name + "\nContact: " + phone);
+                                                        call.setVisibility(View.VISIBLE);
+
+                                                    }
+
+                                                }
+
+
+                                                @Override
+                                                public void onCancelled(@NonNull @NotNull DatabaseError error) {
+
+                                                }
+                                            });
+
+                                            getHelperLocation();
+                                        }
                                         else{
                                             getHelper();
                                             radius =1;
@@ -290,6 +351,37 @@ public class Needer extends FragmentActivity implements OnMapReadyCallback,
     }
 
     private void getHelperLocation(){
+        DatabaseReference refer1 = FirebaseDatabase.getInstance().getReference().child("User Info").child(userId).child("helper");
+        refer1.addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull @NotNull DataSnapshot snapshot) {
+                if(snapshot.exists()){
+                    helperFoundId = snapshot.getValue(String.class);
+
+        DatabaseReference help = FirebaseDatabase.getInstance().getReference().child("User Info").child(helperFoundId);
+        help.addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull @NotNull DataSnapshot snapshot) {
+                if (snapshot.exists()) {
+
+                    String name = snapshot.child("name").getValue(String.class);
+                    search.setVisibility(View.INVISIBLE);
+                    String phone = snapshot.child("phone").getValue(String.class);
+                    search1.setVisibility(View.VISIBLE);
+                    search1.setText("Name: " + name + "\nContact: " + phone);
+                    call.setVisibility(View.VISIBLE);
+
+                }
+
+            }
+
+
+            @Override
+            public void onCancelled(@NonNull @NotNull DatabaseError error) {
+
+            }
+        });
+
         DatabaseReference refHelper = FirebaseDatabase.getInstance().getReference().child("Helper Available").child(helperFoundId).child("l");
         refHelper.addValueEventListener(new ValueEventListener() {
             @Override
@@ -320,6 +412,14 @@ public class Needer extends FragmentActivity implements OnMapReadyCallback,
 
             }
         });
+                }
+            }
+
+            @Override
+            public void onCancelled(@NonNull @NotNull DatabaseError error) {
+
+            }
+        });
     }
     private void getRouteToMarker(LatLng pick){
 
@@ -345,7 +445,7 @@ public class Needer extends FragmentActivity implements OnMapReadyCallback,
 
     @Override
     public void onRoutingStart() {
-            Toast.makeText(this,s,Toast.LENGTH_LONG).show();
+            //Toast.makeText(this,s,Toast.LENGTH_LONG).show();
     }
 
     @Override
@@ -355,7 +455,7 @@ public class Needer extends FragmentActivity implements OnMapReadyCallback,
                 poly.remove();
             }
         }
-        Toast.makeText(getApplicationContext(),"come",Toast.LENGTH_LONG).show();
+       // Toast.makeText(getApplicationContext(),"come",Toast.LENGTH_LONG).show();
 
         polylines = new ArrayList<>();
         //add route(s) to the map.
@@ -370,8 +470,14 @@ public class Needer extends FragmentActivity implements OnMapReadyCallback,
             polyOptions.addAll(route.get(i).getPoints());
             Polyline polyline = mMap.addPolyline(polyOptions);
             polylines.add(polyline);
-
-            Toast.makeText(getApplicationContext(),"Route "+ (i+1) +": distance - "+ route.get(i).getDistanceValue()+": duration - "+ route.get(i).getDurationValue(),Toast.LENGTH_SHORT).show();
+            distance.setVisibility(View.VISIBLE);
+            Integer r = new Integer(route.get(i).getDistanceValue());
+            float dist = r.floatValue();
+            dist = dist/1000;
+            distance.setText( "distance -"+" " + String.valueOf(dist)+ " Km\nduration - "+ String.valueOf(route.get(i).getDurationValue()/60+" Minute"));
+           // Toast.makeText(getApplicationContext(),"Route "+ (i+1) +": distance - "+ route.get(i).getDistanceValue()+": duration - "+ route.get(i).getDurationValue(),Toast.LENGTH_SHORT).show();
+           if(dist<100)
+                finished();
             break;
         }
     }
@@ -386,5 +492,45 @@ public class Needer extends FragmentActivity implements OnMapReadyCallback,
 
         }
         polylines.clear();
+    }
+    public void calling(View view){
+        DatabaseReference data = FirebaseDatabase.getInstance().getReference().child("User Info").child(helperFoundId).child("phone");
+        data.addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot snapshot) {
+                if (snapshot.exists()) {
+                    String contact = snapshot.getValue(String.class);
+                    Toast.makeText(getApplicationContext(),contact,Toast.LENGTH_LONG).show();
+                    Intent intent = new Intent(Intent.ACTION_DIAL);
+                    intent.setData(Uri.parse("tel:"+contact));
+                    startActivity(intent);
+                }
+            }
+
+            @Override
+            public void onCancelled(@NonNull @NotNull DatabaseError error) {
+
+            }
+        });
+    }
+    public void finished(){
+        final AlertDialog.Builder passwordResetDialog = new AlertDialog.Builder(this);
+        passwordResetDialog.setTitle("Does Helper Reached?");
+        passwordResetDialog.setPositiveButton("Yes", (dialog, which) -> {
+                undo();
+        });
+        passwordResetDialog.setNegativeButton("No", (dialog, which) -> {
+
+        });
+        passwordResetDialog.show();
+    }
+    public void undo(){
+        Toast.makeText(getApplicationContext(),"Thanks for using our app",Toast.LENGTH_SHORT).show();
+        DatabaseReference ref = FirebaseDatabase.getInstance().getReference().child("User Info").child(userId).child("helper");
+        ref.removeValue();
+        //ref.child("helping");
+        DatabaseReference ref1 = FirebaseDatabase.getInstance().getReference().child("User Info").child(userId).child("helping");
+        ref1.removeValue();
+        startActivity(new Intent(getApplicationContext(),MainActivity.class));
     }
 }

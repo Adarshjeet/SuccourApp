@@ -1,5 +1,6 @@
 package com.example.succour;
 import android.Manifest;
+import android.app.Activity;
 import android.app.PendingIntent;
 import android.content.Intent;
 import android.content.pm.PackageManager;
@@ -13,6 +14,8 @@ import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
+import androidx.core.view.GravityCompat;
+import androidx.drawerlayout.widget.DrawerLayout;
 
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
@@ -31,15 +34,14 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class MainActivity extends AppCompatActivity {
-
-    private GpsTracker gpsTracker;
     String userToken;
     String userId;
-    private TextView tvLatitude,tvLongitude;
+    DrawerLayout drawerLayout;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        drawerLayout = findViewById(R.id.drawer_layout);
         FirebaseMessaging.getInstance().getToken()
                 .addOnCompleteListener(new OnCompleteListener<String>() {
                     @Override
@@ -58,10 +60,6 @@ public class MainActivity extends AppCompatActivity {
                         ref.setValue(userToken);
                     }
                 });
-        tvLatitude = (TextView)findViewById(R.id.latitude);
-        tvLongitude = (TextView)findViewById(R.id.longitude);
-        tvLatitude.setVisibility(View.INVISIBLE);
-        tvLongitude.setVisibility(View.VISIBLE);
 
         try {
             if (ContextCompat.checkSelfPermission(getApplicationContext(), Manifest.permission.SEND_SMS) != PackageManager.PERMISSION_GRANTED ) {
@@ -71,21 +69,6 @@ public class MainActivity extends AppCompatActivity {
             e.printStackTrace();
         }
 
-    }
-
-    public void getLocation(View view){
-        /*gpsTracker = new GpsTracker(MainActivity.this);
-        if(gpsTracker.canGetLocation()){
-            double latitude = gpsTracker.getLatitude();
-            double longitude = gpsTracker.getLongitude();
-            tvLatitude.setText(String.valueOf(latitude));
-            tvLongitude.setText(String.valueOf(longitude));
-            FcmNotificationsSender fcmNotificationsSender = new FcmNotificationsSender(userToken,"Emergency","I am in emergency please help", getApplicationContext(),MainActivity.this);
-            fcmNotificationsSender.SendNotifications();
-          // startActivity(new Intent(getApplicationContext(),MyProfile.class));
-        }else{
-            gpsTracker.showSettingsAlert();
-        }*/
     }
     public void onMap(View view)
     {
@@ -137,7 +120,7 @@ public class MainActivity extends AppCompatActivity {
     public void onRequestPermissionsResult(int requestCode, @NonNull  String[] permissions, @NonNull int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
         if(requestCode==101 && grantResults.length>0 && grantResults[0]==PackageManager.PERMISSION_GRANTED){
-          sendmessage();
+         // sendmessage();
         }
         else{
             Toast.makeText(getApplicationContext(),"Permission deny",Toast.LENGTH_LONG).show();
@@ -153,5 +136,42 @@ public class MainActivity extends AppCompatActivity {
     }
     public void Additional(View view){
         startActivity(new Intent(getApplicationContext(),AdditionalFeature.class));
+    }
+    public void ClickMenu(View view){
+        openDrawer(drawerLayout);
+    }
+
+    private static void openDrawer(DrawerLayout drawerLayout) {
+        drawerLayout.openDrawer(GravityCompat.START);
+    }
+    public void ClickLogo(View view){
+        closeDrawer(drawerLayout);
+    }
+
+    public static void closeDrawer(DrawerLayout drawerLayout) {
+        if(drawerLayout.isDrawerOpen(GravityCompat.START)){
+            drawerLayout.closeDrawer(GravityCompat.START);
+        }
+
+    }
+    public void ClickHome(View view){
+        recreate();
+    }
+    public void ClickDashboard(View view){
+        redirectActivity(this,AdditionalFeature.class);
+    }
+    public void ClickAboutUs(View view){
+        redirectActivity(this,MyProfile.class);
+    }
+    public static void redirectActivity(Activity activity, Class aClass){
+        Intent intent = new Intent(activity,aClass);
+        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+        activity.startActivity(intent);
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        closeDrawer(drawerLayout);
     }
 }

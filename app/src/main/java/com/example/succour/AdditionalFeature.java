@@ -67,7 +67,7 @@ public class AdditionalFeature extends FragmentActivity implements OnMapReadyCal
 
     private GoogleMap mMap;
     Location mLastLocation;
-    Button search;
+    Button search,cancel;
     String s;
     Marker mCurrLocationMarker;
     GoogleApiClient mGoogleApiClient;
@@ -81,7 +81,7 @@ public class AdditionalFeature extends FragmentActivity implements OnMapReadyCal
     private Marker helpMarker;
     LatLng helperLatLng;
     boolean flag=false;
-    Button distance,doctor,motor,blood;
+    Button distance,doctor,motor,blood,search1;
     ImageButton call;
     private List<Polyline> polylines;
     private static final int[] COLORS = new int[]{R.color.primary_dark_material_light};
@@ -103,6 +103,10 @@ public class AdditionalFeature extends FragmentActivity implements OnMapReadyCal
         }
         search = (Button)findViewById(R.id.button7);
         search.setVisibility(View.INVISIBLE);
+        search1 = (Button)findViewById(R.id.button15);
+        search1.setVisibility(View.INVISIBLE);
+        cancel = (Button)findViewById(R.id.button);
+        cancel.setVisibility(View.INVISIBLE);
         call = (ImageButton)findViewById(R.id.imageButton);
         call.setVisibility(View.INVISIBLE);
         distance = (Button)findViewById(R.id.button8);
@@ -235,19 +239,19 @@ public class AdditionalFeature extends FragmentActivity implements OnMapReadyCal
         doctor.setVisibility(View.INVISIBLE);
         motor.setVisibility(View.INVISIBLE);
         blood.setVisibility(View.INVISIBLE);
+        search1.setVisibility(View.VISIBLE);
         getHelper("Motor Mechanic");
     }
     public  void Doctor(View view){
         doctor.setVisibility(View.INVISIBLE);
         motor.setVisibility(View.INVISIBLE);
+        search1.setVisibility(View.VISIBLE);
         blood.setVisibility(View.INVISIBLE);getHelper("Doctor");
     }
 int count=0;
     private void getHelper(String key1){
         DatabaseReference keys =FirebaseDatabase.getInstance().getReference().child("User Info").child(userId).child("keyForHelp");
         keys.setValue(key1);
-        search.setVisibility(View.VISIBLE);
-        search.setText("Searching........");
         DatabaseReference helperReference = FirebaseDatabase.getInstance().getReference().child(key1);
         GeoFire geofire = new GeoFire(helperReference);
         GeoQuery geoQuery = geofire.queryAtLocation(new GeoLocation(pickUp.latitude, pickUp.longitude),radius);
@@ -270,6 +274,8 @@ int count=0;
                             @Override
                             public void onDataChange(@NonNull @NotNull DataSnapshot snapshot) {
                                 if(snapshot.exists()){
+                                    search.setVisibility(View.VISIBLE);
+                                    search1.setVisibility(View.INVISIBLE);
                                     String name = snapshot.child("name").getValue(String.class);
                                     String con = snapshot.child("phone").getValue(String.class);
                                     search.setText(search.getText().toString()+"\n"+name+" "+con);
@@ -331,7 +337,8 @@ int count=0;
 
                                                         String name = snapshot.child("name").getValue(String.class);
                                                         String phone = snapshot.child("phone").getValue(String.class);
-                                                        search.setText("Name: " + name + "\nContact: " + phone);
+                                                        search.setText(name);
+                                                        search1.setVisibility(View.INVISIBLE);
                                                         call.setVisibility(View.VISIBLE);
 
                                                     }
@@ -376,15 +383,13 @@ int count=0;
 
             @Override
             public void onGeoQueryReady() {
-                if(!helperFound){
+                if(!helperFound && radius<=5 ){
                     radius++;
-                    if(radius>=5){
-                        doctor.setVisibility(View.VISIBLE);
-                        doctor.setText("No nearby User Found");
-                    }
+
                     getHelper(key1);
 
                 }
+                else search1.setText("No nearby User found");
             }
 
             @Override
@@ -414,9 +419,10 @@ int count=0;
 
                     String name = snapshot.child("name").getValue(String.class);
                     search.setVisibility(View.INVISIBLE);
+                    search1.setVisibility(View.INVISIBLE);
                     String phone = snapshot.child("phone").getValue(String.class);
                     search.setVisibility(View.VISIBLE);
-                    search.setText("Name: " + name + "\nContact: " + phone);
+                    search.setText(name);
                     call.setVisibility(View.VISIBLE);
 
                 }
@@ -518,8 +524,14 @@ int count=0;
             Polyline polyline = mMap.addPolyline(polyOptions);
             polylines.add(polyline);
             distance.setVisibility(View.VISIBLE);
-            distance.setText("Distance: "+String.valueOf(route.get(i).getDistanceValue()/1000)+"Km\nTime:"+String.valueOf(route.get(i).getDurationValue()/60)+"minute");
-            Toast.makeText(getApplicationContext(),"Route "+ (i+1) +": distance - "+ route.get(i).getDistanceValue()+": duration - "+ route.get(i).getDurationValue(),Toast.LENGTH_SHORT).show();
+            Integer r = new Integer(route.get(i).getDistanceValue());
+            float dist = r.floatValue();
+            dist = dist/1000;
+            cancel.setVisibility(View.VISIBLE);
+            distance.setText( "distance -"+" " + String.valueOf(dist)+ " Km\nduration - "+ String.valueOf(route.get(i).getDurationValue()/60+" Minute"));
+            // Toast.makeText(getApplicationContext(),"Route "+ (i+1) +": distance - "+ route.get(i).getDistanceValue()+": duration - "+ route.get(i).getDurationValue(),Toast.LENGTH_SHORT).show();
+            if(dist<100)
+                finished();
             break;
         }
     }
@@ -559,6 +571,7 @@ int count=0;
         doctor.setVisibility(View.INVISIBLE);
         motor.setVisibility(View.INVISIBLE);
         //blood.setVisibility(View.INVISIBLE);
+
         Spinner spinner1 = (Spinner) findViewById(R.id.spinner1);
 
         // Spinner Drop down elements
@@ -588,6 +601,8 @@ int count=0;
 
                 String item1 = parent.getItemAtPosition(position).toString();
                 if(!item1.equals("Choose Blood Group"))
+                    search1.setVisibility(View.VISIBLE);
+                    search.setVisibility(View.INVISIBLE);
                     getHelper(item1);
             }
 
@@ -616,5 +631,38 @@ int count=0;
         DatabaseReference ref1 = FirebaseDatabase.getInstance().getReference().child("User Info").child(userId).child("helping");
         ref1.removeValue();
         startActivity(new Intent(getApplicationContext(),MainActivity.class));
+    }
+    public void cancel(View view){
+        final AlertDialog.Builder passwordResetDialog = new AlertDialog.Builder(this);
+        passwordResetDialog.setTitle("Do you want to cancel the help request");
+        passwordResetDialog.setPositiveButton("Yes", (dialog, which) -> {
+            cancel1();
+        });
+        passwordResetDialog.setNegativeButton("No", (dialog, which) -> {
+
+        });
+        passwordResetDialog.show();
+    }
+    public void cancel1(){
+        sendNotification1();
+        DatabaseReference ref  = FirebaseDatabase.getInstance().getReference().child("User Info").child(userId).child("helping");
+        ref.removeValue();
+        DatabaseReference ref1 = FirebaseDatabase.getInstance().getReference().child("User Info").child(userId).child("helper");
+        ref1.removeValue();
+        DatabaseReference ref2 = FirebaseDatabase.getInstance().getReference().child("User Info").child(userId).child("keyForHelp");
+        ref2.removeValue();
+        startActivity(new Intent(getApplicationContext(),MainActivity.class));
+    }
+    public void sendNotification1(){
+        FcmNotificationsSender fcmNotificationsSender = new FcmNotificationsSender(userToken,"Emergency","User cancel the help request", getApplicationContext(), AdditionalFeature.this);
+        fcmNotificationsSender.SendNotifications();
+        DatabaseReference ref = FirebaseDatabase.getInstance().getReference().child("User Info").child(helperFoundId).child("ready");
+        ref.removeValue();
+        DatabaseReference ref1 = FirebaseDatabase.getInstance().getReference().child("User Info").child(helperFoundId).child("needer id");
+        ref1.removeValue();
+    }
+    public void sendNotification1(String x){
+        DatabaseReference ref1 = FirebaseDatabase.getInstance().getReference().child("User Info").child(helperFoundId).child("needer id");
+        ref1.removeValue();
     }
 }

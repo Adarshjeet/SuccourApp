@@ -245,6 +245,20 @@ public class Needer extends FragmentActivity implements OnMapReadyCallback,
                 if(!helperFound && !key.equals(userId) && !arr.contains(key)){
                     helperFound= true;
                     helperFoundId=key;
+                    DatabaseReference reference1 = FirebaseDatabase.getInstance().getReference().child("User Info").child(key).child("ready");
+                    reference1.addValueEventListener(new ValueEventListener() {
+                        @Override
+                        public void onDataChange(@NonNull @NotNull DataSnapshot snapshot) {
+                            if(snapshot.exists()){
+                                searchAgain();
+                            }
+                        }
+
+                        @Override
+                        public void onCancelled(@NonNull @NotNull DatabaseError error) {
+
+                        }
+                    });
                     DatabaseReference ref = FirebaseDatabase.getInstance().getReference().child("User Info").child(key).child("token");
                     ref.addValueEventListener(new ValueEventListener() {
                         @Override
@@ -315,13 +329,7 @@ public class Needer extends FragmentActivity implements OnMapReadyCallback,
                                         }
                                     }
                                     else{
-                                        sendNotification1("s");
-                                        //search.setText("again go");
-                                        Toast.makeText(getApplicationContext(), "again", Toast.LENGTH_LONG).show();
-                                        arr.add(key);
-                                        radius--;
-                                        helperFound = false;
-                                        getHelper();
+                                        searchAgain();
                                     }
 
                                 }
@@ -599,5 +607,14 @@ public class Needer extends FragmentActivity implements OnMapReadyCallback,
     public void onBackPressed() {
         super.onBackPressed();
         finish();
+    }
+    public void searchAgain(){
+        sendNotification1("s");
+        //search.setText("again go");
+        Toast.makeText(getApplicationContext(), "again", Toast.LENGTH_LONG).show();
+        arr.add(helperFoundId);
+        radius--;
+        helperFound = false;
+        getHelper();
     }
 }

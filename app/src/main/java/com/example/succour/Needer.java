@@ -126,6 +126,7 @@ public class Needer extends FragmentActivity implements OnMapReadyCallback,
                         getHelperLocation();
                     }
                 }
+
             }
 
             @Override
@@ -224,9 +225,15 @@ public class Needer extends FragmentActivity implements OnMapReadyCallback,
     public void Search(View view){
         getHelper();
     }
+    ArrayList<String> arr = new ArrayList<String>();
 
     private void getHelper(){
-        search.setText("Searching........");
+        search.setText("Searching............");
+        if(radius>5){
+            search.setText("No User Found");
+            helperFound=true;
+            search.setClickable(false);
+        }
         DatabaseReference helperReference = FirebaseDatabase.getInstance().getReference().child("Helper Available");
         GeoFire geofire = new GeoFire(helperReference);
         GeoQuery geoQuery = geofire.queryAtLocation(new GeoLocation(pickUp.latitude, pickUp.longitude),radius);
@@ -235,7 +242,7 @@ public class Needer extends FragmentActivity implements OnMapReadyCallback,
         geoQuery.addGeoQueryEventListener(new GeoQueryEventListener() {
             @Override
             public void onKeyEntered(String key, GeoLocation location) {
-                if(!helperFound && !key.equals(userId)){
+                if(!helperFound && !key.equals(userId) && !arr.contains(key)){
                     helperFound= true;
                     helperFoundId=key;
                     DatabaseReference ref = FirebaseDatabase.getInstance().getReference().child("User Info").child(key).child("token");
@@ -262,19 +269,22 @@ public class Needer extends FragmentActivity implements OnMapReadyCallback,
                     HashMap map = new HashMap();
                     map.put("needer id",userId);
                     reference.updateChildren(map);
-                    search.setText("found waiting for response");
+                    search.setText(key+"found waiting for response");
                     Timer timer = new Timer();
                     timer.schedule(new TimerTask() {
                         @Override
                         public void run() {
                             DatabaseReference refer = FirebaseDatabase.getInstance().getReference().child("User Info").child(userId).child("helping");
+
                             refer.addValueEventListener(new ValueEventListener() {
                                 @Override
                                 public void onDataChange(@NonNull @NotNull DataSnapshot snapshot) {
-                                    if(snapshot.exists()){
-                                        String s=snapshot.getValue(String.class);
-                                        if(s.equals("true")){
-                                            DatabaseReference helper =FirebaseDatabase.getInstance().getReference().child("User Info").child(userId).child("helper");
+                                    Toast.makeText(getApplicationContext(), "again1", Toast.LENGTH_LONG).show();
+                                    if(snapshot.exists()) {
+                                        String s = snapshot.getValue(String.class);
+                                        Toast.makeText(getApplicationContext(), "again2", Toast.LENGTH_LONG).show();
+                                        if (s.equals("true")) {
+                                            DatabaseReference helper = FirebaseDatabase.getInstance().getReference().child("User Info").child(userId).child("helper");
                                             helper.setValue(helperFoundId);
                                             DatabaseReference help = FirebaseDatabase.getInstance().getReference().child("User Info").child(key);
                                             help.addValueEventListener(new ValueEventListener() {
@@ -287,7 +297,7 @@ public class Needer extends FragmentActivity implements OnMapReadyCallback,
                                                         String phone = snapshot.child("phone").getValue(String.class);
                                                         search1.setVisibility(View.VISIBLE);
                                                         reach.setVisibility(View.VISIBLE);
-                                                        search1.setText(name );
+                                                        search1.setText(name);
                                                         call.setVisibility(View.VISIBLE);
 
                                                     }
@@ -303,12 +313,17 @@ public class Needer extends FragmentActivity implements OnMapReadyCallback,
 
                                             getHelperLocation();
                                         }
-                                        else{
-                                            sendNotification1("s");
-                                            getHelper();
-                                            radius =1;
-                                            helperFound= false;}
                                     }
+                                    else{
+                                        sendNotification1("s");
+                                        //search.setText("again go");
+                                        Toast.makeText(getApplicationContext(), "again", Toast.LENGTH_LONG).show();
+                                        arr.add(key);
+                                        radius--;
+                                        helperFound = false;
+                                        getHelper();
+                                    }
+
                                 }
 
                                 @Override
@@ -340,7 +355,9 @@ public class Needer extends FragmentActivity implements OnMapReadyCallback,
                         getHelper();
 
                     }
-                    else search.setText("No nearby User found");
+                    if(radius>5){
+
+                    }
             }
 
             @Override
@@ -563,6 +580,7 @@ public class Needer extends FragmentActivity implements OnMapReadyCallback,
         DatabaseReference ref1 = FirebaseDatabase.getInstance().getReference().child("User Info").child(userId).child("helper");
         ref1.removeValue();
         startActivity(new Intent(getApplicationContext(),MainActivity.class));
+        finish();
     }
     public void sendNotification1(){
         FcmNotificationsSender fcmNotificationsSender = new FcmNotificationsSender(userToken,"Emergency","User cancel the help request", getApplicationContext(), Needer.this);
@@ -577,5 +595,9 @@ public class Needer extends FragmentActivity implements OnMapReadyCallback,
         ref1.removeValue();
     }
 
-
+    @Override
+    public void onBackPressed() {
+        super.onBackPressed();
+        finish();
+    }
 }

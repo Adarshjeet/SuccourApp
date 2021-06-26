@@ -63,8 +63,8 @@ import java.util.List;
 public class MapsActivity extends FragmentActivity implements OnMapReadyCallback,
         LocationListener,GoogleApiClient.ConnectionCallbacks,
         GoogleApiClient.OnConnectionFailedListener, RoutingListener {
-    Button search,search1,distance;
-    ImageButton call;;
+    Button search,search1,distance,fin;
+    Button call;;
     private GoogleMap mMap;
     Location mLastLocation;
     Marker helpMarker;
@@ -84,11 +84,13 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         setContentView(R.layout.activity_maps);
         search = (Button)findViewById(R.id.help);
         //search.setVisibility(View.INVISIBLE);
-        search1 = (Button)findViewById(R.id.button7);
+        search1 = (Button)findViewById(R.id.button8);
         search1.setVisibility(View.INVISIBLE);
-        call = (ImageButton)findViewById(R.id.imageButton);
+        call = (Button)findViewById(R.id.imageButton);
         call.setVisibility(View.INVISIBLE);
-        distance = (Button)findViewById(R.id.button8);
+        fin = (Button)findViewById(R.id.button2);
+        fin.setVisibility(View.INVISIBLE);
+        distance = (Button)findViewById(R.id.button7);
         distance.setVisibility(View.INVISIBLE);
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
                 .findFragmentById(R.id.map);
@@ -242,9 +244,9 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
                                 String name = snapshot.child("name").getValue(String.class);
                                 search.setVisibility(View.INVISIBLE);
-                                String phone = snapshot.child("phone").getValue(String.class);
                                 search1.setVisibility(View.VISIBLE);
-                                search1.setText("Name: " + name + "\nContact: " + phone);
+                                search1.setText(name);
+                                fin.setVisibility(View.VISIBLE);
                                 call.setVisibility(View.VISIBLE);
 
                             }
@@ -433,6 +435,9 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
         });
         passwordResetDialog.show();
+    }
+    public void finishe(View view){
+        finished();
     }
     public void undo(){
         Toast.makeText(getApplicationContext(),"Thanks for using our app",Toast.LENGTH_SHORT).show();

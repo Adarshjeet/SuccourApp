@@ -245,6 +245,10 @@ public class Needer extends FragmentActivity implements OnMapReadyCallback,
                 if(!helperFound && !key.equals(userId) && !arr.contains(key)){
                     helperFound= true;
                     helperFoundId=key;
+                    DatabaseReference h = FirebaseDatabase.getInstance().getReference().child("User Info").child(userId);
+                    HashMap map = new HashMap();
+                    map.put("helping","false");
+                    h.updateChildren(map);
                     DatabaseReference reference1 = FirebaseDatabase.getInstance().getReference().child("User Info").child(key).child("ready");
                     reference1.addValueEventListener(new ValueEventListener() {
                         @Override
@@ -280,9 +284,9 @@ public class Needer extends FragmentActivity implements OnMapReadyCallback,
                     DatabaseReference reference = FirebaseDatabase.getInstance().getReference().child("User Info").child(key);
 
                     Toast.makeText(getApplicationContext(),key,Toast.LENGTH_LONG).show();
-                    HashMap map = new HashMap();
-                    map.put("needer id",userId);
-                    reference.updateChildren(map);
+                    HashMap map1 = new HashMap();
+                    map1.put("needer id",userId);
+                    reference.updateChildren(map1);
                     search.setText(key+"found waiting for response");
                     Timer timer = new Timer();
                     timer.schedule(new TimerTask() {
@@ -293,6 +297,7 @@ public class Needer extends FragmentActivity implements OnMapReadyCallback,
                             refer.addValueEventListener(new ValueEventListener() {
                                 @Override
                                 public void onDataChange(@NonNull @NotNull DataSnapshot snapshot) {
+                                    boolean k;
                                     Toast.makeText(getApplicationContext(), "again1", Toast.LENGTH_LONG).show();
                                     if(snapshot.exists()) {
                                         String s = snapshot.getValue(String.class);
@@ -305,7 +310,6 @@ public class Needer extends FragmentActivity implements OnMapReadyCallback,
                                                 @Override
                                                 public void onDataChange(@NonNull @NotNull DataSnapshot snapshot) {
                                                     if (snapshot.exists()) {
-
                                                         String name = snapshot.child("name").getValue(String.class);
                                                         search.setVisibility(View.INVISIBLE);
                                                         String phone = snapshot.child("phone").getValue(String.class);
@@ -327,10 +331,11 @@ public class Needer extends FragmentActivity implements OnMapReadyCallback,
 
                                             getHelperLocation();
                                         }
+                                        else{
+                                            searchAgain();
+                                        }
                                     }
-                                    else{
-                                        searchAgain();
-                                    }
+
 
                                 }
 
@@ -363,9 +368,7 @@ public class Needer extends FragmentActivity implements OnMapReadyCallback,
                         getHelper();
 
                     }
-                    if(radius>5){
 
-                    }
             }
 
             @Override
@@ -398,7 +401,6 @@ public class Needer extends FragmentActivity implements OnMapReadyCallback,
 
                     String name = snapshot.child("name").getValue(String.class);
                     search.setVisibility(View.INVISIBLE);
-                    String phone = snapshot.child("phone").getValue(String.class);
                     search1.setVisibility(View.VISIBLE);
                     search1.setText(name);
                     reach.setVisibility(View.VISIBLE);
@@ -511,7 +513,7 @@ public class Needer extends FragmentActivity implements OnMapReadyCallback,
             distance.setText( "distance -"+" " + String.valueOf(dist)+ " Km\nduration - "+ String.valueOf(route.get(i).getDurationValue()/60+" Minute"));
            // Toast.makeText(getApplicationContext(),"Route "+ (i+1) +": distance - "+ route.get(i).getDistanceValue()+": duration - "+ route.get(i).getDurationValue(),Toast.LENGTH_SHORT).show();
            if(dist<100)
-                finished();
+               finished();
             break;
         }
     }

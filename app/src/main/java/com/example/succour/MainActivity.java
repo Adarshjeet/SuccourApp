@@ -70,10 +70,6 @@ public class MainActivity extends AppCompatActivity {
         }
 
     }
-    public void onMap(View view)
-    {
-        startActivity(new Intent(getApplicationContext(), MapsActivity.class));
-    }
     public void onEmergency(View view)
     {
 
@@ -144,34 +140,19 @@ public class MainActivity extends AppCompatActivity {
     private static void openDrawer(DrawerLayout drawerLayout) {
         drawerLayout.openDrawer(GravityCompat.START);
     }
-    public void ClickLogo(View view){
-        closeDrawer(drawerLayout);
-    }
-
     public static void closeDrawer(DrawerLayout drawerLayout) {
         if(drawerLayout.isDrawerOpen(GravityCompat.START)){
             drawerLayout.closeDrawer(GravityCompat.START);
         }
 
     }
-    public void ClickHome(View view){
-        recreate();
-    }
-    public void ClickDashboard(View view){
-        redirectActivity(this,AdditionalFeature.class);
-    }
-    public void ClickAboutUs(View view){
-        redirectActivity(this,MyProfile.class);
-    }
-    public static void redirectActivity(Activity activity, Class aClass){
-        Intent intent = new Intent(activity,aClass);
-        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-        activity.startActivity(intent);
-    }
 
     @Override
     protected void onPause() {
         super.onPause();
         closeDrawer(drawerLayout);
+    }
+    public void HelperPage(View view){
+        startActivity(new Intent(getApplicationContext(),MapsActivity.class));
     }
 }

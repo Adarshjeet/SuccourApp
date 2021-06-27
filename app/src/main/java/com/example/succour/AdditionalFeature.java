@@ -67,7 +67,7 @@ public class AdditionalFeature extends FragmentActivity implements OnMapReadyCal
 
     private GoogleMap mMap;
     Location mLastLocation;
-    Button search,cancel;
+    Button search,cancel,f;
     String s;
     Marker mCurrLocationMarker;
     GoogleApiClient mGoogleApiClient;
@@ -82,11 +82,11 @@ public class AdditionalFeature extends FragmentActivity implements OnMapReadyCal
     LatLng helperLatLng;
     boolean flag=false;
     Button distance,doctor,motor,blood,search1;
-    ImageButton call;
+    Button call;
     private List<Polyline> polylines;
     private static final int[] COLORS = new int[]{R.color.primary_dark_material_light};
 
-
+    ArrayList<String> arr = new ArrayList<String>();
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -94,20 +94,15 @@ public class AdditionalFeature extends FragmentActivity implements OnMapReadyCal
         doctor = (Button)findViewById(R.id.btnDoctor);
         motor = (Button)findViewById(R.id.btnMechanic);
         blood = (Button)findViewById(R.id.button10);
-        try {
-            if (ContextCompat.checkSelfPermission(getApplicationContext(), android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED ) {
-                ActivityCompat.requestPermissions(this, new String[]{android.Manifest.permission.ACCESS_FINE_LOCATION}, 101);
-            }
-        } catch (Exception e){
-            e.printStackTrace();
-        }
         search = (Button)findViewById(R.id.button7);
         search.setVisibility(View.INVISIBLE);
         search1 = (Button)findViewById(R.id.button15);
         search1.setVisibility(View.INVISIBLE);
+        f = (Button)findViewById(R.id.button3);
+        f.setVisibility(View.INVISIBLE);
         cancel = (Button)findViewById(R.id.button);
         cancel.setVisibility(View.INVISIBLE);
-        call = (ImageButton)findViewById(R.id.imageButton);
+        call = (Button)findViewById(R.id.imageButton);
         call.setVisibility(View.INVISIBLE);
         distance = (Button)findViewById(R.id.button8);
         distance.setVisibility(View.INVISIBLE);
@@ -246,7 +241,8 @@ public class AdditionalFeature extends FragmentActivity implements OnMapReadyCal
         doctor.setVisibility(View.INVISIBLE);
         motor.setVisibility(View.INVISIBLE);
         search1.setVisibility(View.VISIBLE);
-        blood.setVisibility(View.INVISIBLE);getHelper("Doctor");
+        blood.setVisibility(View.INVISIBLE);
+        getHelper("Doctor");
     }
 int count=0;
     private void getHelper(String key1){
@@ -256,29 +252,42 @@ int count=0;
         GeoFire geofire = new GeoFire(helperReference);
         GeoQuery geoQuery = geofire.queryAtLocation(new GeoLocation(pickUp.latitude, pickUp.longitude),radius);
         geoQuery.removeAllListeners();
-
         geoQuery.addGeoQueryEventListener(new GeoQueryEventListener() {
             @Override
             public void onKeyEntered(String key, GeoLocation location) {
-                if(!helperFound && !key.equals(userId)){
+                if(radius>5){
+                   search1.setText("No User Found");
+                    helperFound=true;
+                }
+                DatabaseReference h = FirebaseDatabase.getInstance().getReference().child("User Info").child(userId);
+                HashMap map1 = new HashMap();
+                map1.put("helping","false");
+                h.updateChildren(map1);
+                if(!helperFound && !key.equals(userId) && !arr.contains(key)){
                     helperFound= true;
                     helperFoundId=key;
                     if(key1.equals("A+")||key1.equals("B+")||key1.equals("B-")
                     ||key1.equals("A-")||key1.equals("O+")||key1.equals("O-")
                     ||key1.equals("AB-")||key1.equals("AB+")){
-
-                        count++;
+                       // count++;
                         helperFound=false;
                         DatabaseReference blood = FirebaseDatabase.getInstance().getReference().child("User Info").child(key);
                         blood.addValueEventListener(new ValueEventListener() {
                             @Override
                             public void onDataChange(@NonNull @NotNull DataSnapshot snapshot) {
                                 if(snapshot.exists()){
-                                    search.setVisibility(View.VISIBLE);
+                                    Spinner s = (Spinner)findViewById(R.id.spinner1);
+                                    s.setVisibility(View.INVISIBLE);
+                                    call.setVisibility(View.VISIBLE);
                                     search1.setVisibility(View.INVISIBLE);
+                                    call.setClickable(false);
                                     String name = snapshot.child("name").getValue(String.class);
                                     String con = snapshot.child("phone").getValue(String.class);
-                                    search.setText(search.getText().toString()+"\n"+name+" "+con);
+                                    if(count==0)call.setText(name+" "+con);
+                                    else call.setText(call.getText().toString()+"\n"+name+" "+con);
+                                    arr.add(key);
+                                    radius--;
+                                    count++;
                                 }
                             }
 
@@ -287,7 +296,10 @@ int count=0;
 
                             }
                         });
-                        if(count>10 || radius >4)helperFound=true;
+                        if(radius>5){
+                            helperFound=true;
+                            search1.setText("No User Found");
+                        }
                     }
                     else{
                     DatabaseReference ref = FirebaseDatabase.getInstance().getReference().child("User Info").child(key).child("token");
@@ -334,11 +346,9 @@ int count=0;
                                                 @Override
                                                 public void onDataChange(@NonNull @NotNull DataSnapshot snapshot) {
                                                     if (snapshot.exists()) {
-
-                                                        String name = snapshot.child("name").getValue(String.class);
-                                                        String phone = snapshot.child("phone").getValue(String.class);
-                                                        search.setText(name);
                                                         search1.setVisibility(View.INVISIBLE);
+                                                        String name = snapshot.child("name").getValue(String.class);
+                                                        search.setText(name);
                                                         call.setVisibility(View.VISIBLE);
 
                                                     }
@@ -354,9 +364,8 @@ int count=0;
 
                                             getHelperLocation(key1);
                                         }else{
-                                            getHelper(key1);
-                                            radius =1;
-                                            helperFound= false;}
+                                            searchAgain(key1);
+                                        }
                                     }
                                 }
 
@@ -383,13 +392,15 @@ int count=0;
 
             @Override
             public void onGeoQueryReady() {
-                if(!helperFound && radius<=5 ){
+                if(!helperFound && radius<5 ){
                     radius++;
-
+                    if(radius==4)flag = true;
                     getHelper(key1);
-
                 }
-                else search1.setText("No nearby User found");
+                else{
+                    if(flag)
+                    search1.setText("No User Found");
+                }
             }
 
             @Override
@@ -508,8 +519,7 @@ int count=0;
                 poly.remove();
             }
         }
-        Toast.makeText(getApplicationContext(),"come",Toast.LENGTH_LONG).show();
-
+        f.setVisibility(View.VISIBLE);
         polylines = new ArrayList<>();
         //add route(s) to the map.
         for (int i = 0; i <route.size(); i++) {
@@ -602,6 +612,8 @@ int count=0;
                 String item1 = parent.getItemAtPosition(position).toString();
                 if(!item1.equals("Choose Blood Group"))
                     search1.setVisibility(View.VISIBLE);
+                   // spinner1.setVisibility(View.INVISIBLE);
+                    search.setText("");
                     search.setVisibility(View.INVISIBLE);
                     getHelper(item1);
             }
@@ -664,5 +676,34 @@ int count=0;
     public void sendNotification1(String x){
         DatabaseReference ref1 = FirebaseDatabase.getInstance().getReference().child("User Info").child(helperFoundId).child("needer id");
         ref1.removeValue();
+    }
+    public void searchAgain(String key1){
+        sendNotification1("s");
+        //search.setText("again go");
+        DatabaseReference ref = FirebaseDatabase.getInstance().getReference().child("User Info").child(userId).child("helping");
+        ref.addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull @NotNull DataSnapshot snapshot) {
+                if(snapshot.exists()){
+                    String t = snapshot.getValue(String.class);
+                    if(t.equals("false")){
+                        Toast.makeText(getApplicationContext(), "again", Toast.LENGTH_LONG).show();
+                        arr.add(helperFoundId);
+                        radius--;
+                        helperFound = false;
+                        getHelper(key1);
+                    }
+                }
+            }
+
+            @Override
+            public void onCancelled(@NonNull @NotNull DatabaseError error) {
+
+            }
+        });
+
+    }
+    public void sd(View view){
+        finished();
     }
 }

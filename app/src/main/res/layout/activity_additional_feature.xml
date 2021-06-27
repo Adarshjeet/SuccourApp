@@ -14,7 +14,7 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         tools:context=".AdditionalFeature"
-        tools:layout_editor_absoluteX="-26dp"
+        tools:layout_editor_absoluteX="0dp"
         tools:layout_editor_absoluteY="0dp" />
 
     <Button
@@ -77,20 +77,22 @@
         app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/btnMechanic"
-        app:layout_constraintVertical_bias="0.908" />
+        app:layout_constraintVertical_bias="0.78" />
 
-    <ImageButton
+    <Button
         android:id="@+id/imageButton"
-        android:layout_width="70dp"
-        android:layout_height="70dp"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
         android:layout_marginTop="395dp"
         android:onClick="calling"
+        android:text="Call Helper"
+        android:textStyle="bold"
         app:layout_constraintBottom_toBottomOf="@+id/map"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="1.0"
         app:layout_constraintStart_toEndOf="@+id/button7"
         app:layout_constraintTop_toBottomOf="@+id/btnMechanic"
-        app:layout_constraintVertical_bias="0.567"
+        app:layout_constraintVertical_bias="1.0"
         app:srcCompat="@android:drawable/sym_action_call" />
 
     <Button
@@ -104,7 +106,7 @@
         app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/button7"
-        app:layout_constraintVertical_bias="1.0" />
+        app:layout_constraintVertical_bias="0.151" />
 
     <Button
         android:id="@+id/button"
@@ -130,6 +132,20 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintVertical_bias="1.0" />
+
+    <Button
+        android:id="@+id/button3"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Helper Reached?"
+        android:textStyle="bold"
+        android:onClick="sd"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.0"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_bias="0.14" />
 
 
 </androidx.constraintlayout.widget.ConstraintLayout>

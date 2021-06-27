@@ -613,10 +613,27 @@ public class Needer extends FragmentActivity implements OnMapReadyCallback,
     public void searchAgain(){
         sendNotification1("s");
         //search.setText("again go");
-        Toast.makeText(getApplicationContext(), "again", Toast.LENGTH_LONG).show();
-        arr.add(helperFoundId);
-        radius--;
-        helperFound = false;
-        getHelper();
+        DatabaseReference ref = FirebaseDatabase.getInstance().getReference().child("User Info").child(userId).child("helping");
+        ref.addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull @NotNull DataSnapshot snapshot) {
+                if(snapshot.exists()){
+                    String t = snapshot.getValue(String.class);
+                    if(t.equals("false")){
+                        Toast.makeText(getApplicationContext(), "again", Toast.LENGTH_LONG).show();
+                        arr.add(helperFoundId);
+                        radius--;
+                        helperFound = false;
+                        getHelper();
+                    }
+                }
+            }
+
+            @Override
+            public void onCancelled(@NonNull @NotNull DatabaseError error) {
+
+            }
+        });
+
     }
 }

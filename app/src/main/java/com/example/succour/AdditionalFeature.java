@@ -326,13 +326,13 @@ int count=0;
                     HashMap map = new HashMap();
                     map.put("needer id",userId);
                     reference.updateChildren(map);
-                    search.setText("found and waiting for response");
+                    search1.setText("found and waiting for response");
                     Timer timer = new Timer();
                     timer.schedule(new TimerTask() {
                         @Override
                         public void run() {
                             DatabaseReference refer = FirebaseDatabase.getInstance().getReference().child("User Info").child(userId).child("helping");
-                            refer.addValueEventListener(new ValueEventListener() {
+                            refer.addListenerForSingleValueEvent(new ValueEventListener() {
                                 @Override
                                 public void onDataChange(@NonNull @NotNull DataSnapshot snapshot) {
                                     if(snapshot.exists()){
@@ -364,6 +364,7 @@ int count=0;
 
                                             getHelperLocation(key1);
                                         }else{
+                                            helperReference.removeEventListener(this);
                                             searchAgain(key1);
                                         }
                                     }

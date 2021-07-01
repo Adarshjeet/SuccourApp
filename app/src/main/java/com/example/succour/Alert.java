@@ -2,10 +2,13 @@ package com.example.succour;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
 
 import android.app.AlertDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.widget.Toast;
 
@@ -27,6 +30,13 @@ public class Alert extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_alert_dialog);
         String userId = FirebaseAuth.getInstance().getCurrentUser().getUid();
+        try {
+            if (ContextCompat.checkSelfPermission(getApplicationContext(), android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED ) {
+                ActivityCompat.requestPermissions(this, new String[]{android.Manifest.permission.ACCESS_FINE_LOCATION}, 101);
+            }
+        } catch (Exception e){
+            e.printStackTrace();
+        }
         DatabaseReference ref = FirebaseDatabase.getInstance().getReference().child("User Info").child(userId).child("needer id");
         ref.addValueEventListener(new ValueEventListener() {
             @Override
@@ -66,6 +76,11 @@ public class Alert extends AppCompatActivity {
                 .setNegativeButton("No", new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
+                        String userId = FirebaseAuth.getInstance().getCurrentUser().getUid();
+                        DatabaseReference reference = FirebaseDatabase.getInstance().getReference().child("User Info").child(userId);
+                        HashMap map = new HashMap();
+                        map.put("ready","false");
+                        reference.updateChildren(map);
                         startActivity(new Intent(getApplicationContext(),MainActivity.class));
                     }
                 });

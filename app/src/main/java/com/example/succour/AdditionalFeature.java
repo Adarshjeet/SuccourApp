@@ -113,7 +113,7 @@ public class AdditionalFeature extends FragmentActivity implements OnMapReadyCal
                 .findFragmentById(R.id.map);
         mapFragment.getMapAsync(this);
         DatabaseReference refer = FirebaseDatabase.getInstance().getReference().child("User Info").child(userId).child("helping");
-        refer.addValueEventListener(new ValueEventListener() {
+        refer.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull @NotNull DataSnapshot snapshot) {
                 if(snapshot.exists()){
@@ -121,7 +121,7 @@ public class AdditionalFeature extends FragmentActivity implements OnMapReadyCal
                     assert helpingg != null;
                     if(helpingg.equals("true")){
                         DatabaseReference ref = FirebaseDatabase.getInstance().getReference().child("User Info").child(userId).child("keyForHelp");
-                        ref.addValueEventListener(new ValueEventListener() {
+                        ref.addListenerForSingleValueEvent(new ValueEventListener() {
                             @Override
                             public void onDataChange(@NonNull @NotNull DataSnapshot snapshot) {
                                 String help = snapshot.getValue(String.class);
@@ -310,7 +310,7 @@ int count=0;
                             if (dataSnapshot.exists()){
                                 userToken = dataSnapshot.getValue(String.class);
                                  sendNotification();
-                                //Toast.makeText(getApplicationContext(),userToken,Toast.LENGTH_LONG).show();
+
                             }
                         }
 
@@ -452,7 +452,7 @@ int count=0;
             @Override
             public void onDataChange(@NotNull DataSnapshot snapshot) {
                 if(snapshot.exists()){
-                  //  Toast.makeText(getApplicationContext(),"king2",Toast.LENGTH_LONG).show();
+
                     List<Object> map = (List<Object>)snapshot.getValue();
                     double locationLat = 0;
                     double locationLng = 0;
@@ -463,7 +463,7 @@ int count=0;
                         locationLng = Double.parseDouble(map.get(1).toString());
                     }
                     helperLatLng = new LatLng(locationLat,locationLng);
-                    Toast.makeText(getApplicationContext(),String.valueOf(locationLat),Toast.LENGTH_LONG).show();
+
                     if(helpMarker!=null){
                         helpMarker.remove();
                     }
@@ -565,7 +565,6 @@ int count=0;
             public void onDataChange(@NonNull DataSnapshot snapshot) {
                 if (snapshot.exists()) {
                                 String contact = snapshot.getValue(String.class);
-                                Toast.makeText(getApplicationContext(),contact,Toast.LENGTH_LONG).show();
                                 Intent intent = new Intent(Intent.ACTION_DIAL);
                                 intent.setData(Uri.parse("tel:"+contact));
                                 startActivity(intent);
@@ -688,7 +687,6 @@ int count=0;
                 if(snapshot.exists()){
                     String t = snapshot.getValue(String.class);
                     if(t.equals("false")){
-                        Toast.makeText(getApplicationContext(), "again", Toast.LENGTH_LONG).show();
                         arr.add(helperFoundId);
                         radius--;
                         helperFound = false;

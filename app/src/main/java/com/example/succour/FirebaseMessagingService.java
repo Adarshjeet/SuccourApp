@@ -41,8 +41,6 @@ public class FirebaseMessagingService extends com.google.firebase.messaging.Fire
         Vibrator v = (Vibrator) getSystemService(Context.VIBRATOR_SERVICE);
         long[] pattern = {100, 300, 300, 300};
         v.vibrate(pattern, -1);
-
-
         int resourceImage = getResources().getIdentifier(remoteMessage.getNotification().getIcon(), "drawable", getPackageName());
 
 

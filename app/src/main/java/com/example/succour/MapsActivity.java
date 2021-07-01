@@ -82,6 +82,13 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_maps);
+        try {
+            if (ContextCompat.checkSelfPermission(getApplicationContext(), android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED ) {
+                ActivityCompat.requestPermissions(this, new String[]{android.Manifest.permission.ACCESS_FINE_LOCATION}, 101);
+            }
+        } catch (Exception e){
+            e.printStackTrace();
+        }
         search = (Button)findViewById(R.id.help);
         //search.setVisibility(View.INVISIBLE);
         search1 = (Button)findViewById(R.id.button8);
@@ -96,7 +103,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 .findFragmentById(R.id.map);
         mapFragment.getMapAsync(this);
         DatabaseReference ref = FirebaseDatabase.getInstance().getReference().child("User Info").child(userId).child("ready");
-        ref.addValueEventListener(new ValueEventListener() {
+        ref.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull @NotNull DataSnapshot snapshot) {
                 if (snapshot.exists()) {
@@ -229,7 +236,6 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
     public void Need() {
 
-        // Toast.makeText(getApplicationContext(),userId,Toast.LENGTH_LONG).show();
         DatabaseReference data = FirebaseDatabase.getInstance().getReference().child("User Info").child(userId).child("needer id");
         data.addValueEventListener(new ValueEventListener() {
             @Override
@@ -349,8 +355,6 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 poly.remove();
             }
         }*/
-        Toast.makeText(getApplicationContext(), "come", Toast.LENGTH_LONG).show();
-
         polylines = new ArrayList<>();
         //add route(s) to the map.
         for (int i = 0; i < route.size(); i++) {
@@ -364,7 +368,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             polyOptions.addAll(route.get(i).getPoints());
             Polyline polyline = mMap.addPolyline(polyOptions);
             polylines.add(polyline);
-            //Toast.makeText(getApplicationContext(), "Route " + (i + 1) + ": distance - " + route.get(i).getDistanceValue() + ": duration - " + route.get(i).getDurationValue(), Toast.LENGTH_SHORT).show();
+
             Integer r = new Integer(route.get(i).getDistanceValue());
             float dist = r.floatValue();
             dist = dist/1000;

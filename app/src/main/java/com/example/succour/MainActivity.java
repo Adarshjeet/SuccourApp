@@ -35,10 +35,40 @@ import java.util.Map;
 
 public class MainActivity extends AppCompatActivity {
     String userToken;
-    String userId;
+    String userId=FirebaseAuth.getInstance().getCurrentUser().getUid();
     DrawerLayout drawerLayout;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+
+
+        DatabaseReference halper = FirebaseDatabase.getInstance().getReference().child("User Info").child(userId).child("needer id");
+        halper.addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull @NotNull DataSnapshot snapshot) {
+                if(snapshot.exists()){
+                    DatabaseReference ready = FirebaseDatabase.getInstance().getReference().child("User Info").child(userId).child("ready");
+                    ready.addListenerForSingleValueEvent(new ValueEventListener() {
+                        @Override
+                        public void onDataChange(@NonNull @NotNull DataSnapshot snapshot) {
+                            if(snapshot.exists()){
+
+                            }
+                            else startActivity(new Intent(getApplicationContext(),Alert.class));
+                        }
+
+                        @Override
+                        public void onCancelled(@NonNull @NotNull DatabaseError error) {
+
+                        }
+                    });
+                }
+            }
+
+            @Override
+            public void onCancelled(@NonNull @NotNull DatabaseError error) {
+
+            }
+        });
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         drawerLayout = findViewById(R.id.drawer_layout);
@@ -56,7 +86,6 @@ public class MainActivity extends AppCompatActivity {
                         userToken = task.getResult();
                         userId = FirebaseAuth.getInstance().getCurrentUser().getUid();
                         DatabaseReference ref = FirebaseDatabase.getInstance().getReference().child("User Info").child(userId).child("token");
-                        Toast.makeText(MainActivity.this, userToken, Toast.LENGTH_SHORT).show();
                         ref.setValue(userToken);
                     }
                 });
@@ -69,12 +98,13 @@ public class MainActivity extends AppCompatActivity {
             e.printStackTrace();
         }
 
+
     }
     public void onEmergency(View view)
     {
 
             if (ContextCompat.checkSelfPermission(MainActivity.this, Manifest.permission.SEND_SMS) == PackageManager.PERMISSION_GRANTED) {
-                sendmessage();
+                 sendmessage();
             }
             else{
                 ActivityCompat.requestPermissions(MainActivity.this,new String[]{Manifest.permission.SEND_SMS},101);
